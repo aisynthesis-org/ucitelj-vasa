@@ -1,14 +1,60 @@
-# Učitelj Vasa
+# Učitelj Vasa - AI Asistent za Učenje Programiranja
 
-AI asistent za pomoć u učenju - projekat sa obuke "AI Asistent Učitelj Vasa: Praktična Obuka za Početnike".
+## 📚 O Projektu
 
-## Status projekta
-Dan -1: GitHub repozitorijum kreiran. Osnovna struktura postavljena.
+Učitelj Vasa je AI-powered asistent kreiran kroz 28-dnevni praktični kurs AISYNTHESIS akademije. 
+Cilj je pomoći početnicima da savladaju osnove programiranja kroz interakciju sa AI asistentom.
 
-## Tehnologije
+## 🚀 Trenutni Status
+
+- ✅ Dan -3: Python 3.13+ instaliran
+- ✅ Dan -2: PyCharm unified edition podešen
+- ✅ Dan -1: GitHub repository kreiran
+- ✅ Dan 0: Profesionalna struktura projekta
+- ⏳ Dan 1: Prvi Python modul (sutra)
+
+## 🛠️ Tehnologije
+
 - Python 3.13+
-- PyCharm Unified Edition
-- GitHub
+- PyCharm** unified edition
+- python-dotenv za environment varijable
+- Uskoro: OpenAI API, FastAPI, SQLite
 
-## Autor
-Radoje Djorda - AI Synthesis
+## 📁 Struktura Projekta
+
+ucitelj-vasa/
+├── src/ # Izvorni kod
+│ ├── init.py
+│ ├── ai_services/ # AI integracije
+│ ├── web_api/ # Web API (od nedelje 2)
+│ └── utils/ # Pomoćne funkcije
+├── tests/ # Testovi
+├── docs/ # Dokumentacija
+├── .env # Environment varijable (ne commit-uj!)
+├── .gitignore # Git ignore pravila
+├── requirements.txt # Python dependencies
+└── README.md # Ovaj fajl
+
+🔧 Instalacija
+
+1. Kloniraj repository:
+ 
+git clone https://github.com/[tvoj-username]/ucitelj-vasa.git
+cd ucitelj-vasa
+ 
+2. Kreiraj virtuelno okruženje (preporučeno):
+
+python -m venv venv
+source venv/bin/activate # Na Windows: venv\Scripts\activate
+
+3. Instaliraj dependencies:
+
+pip install -r requirements.txt
+
+👤 Autor
+
+[Tvoje ime] - Student AISYNTHESIS akademije
+
+📄 Licenca
+
+MIT License - slobodno koristi za učenje!
