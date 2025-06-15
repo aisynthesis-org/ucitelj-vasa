@@ -13,8 +13,16 @@ Cilj je pomoći početnicima da savladaju osnove programiranja kroz interakciju 
 - ✅ Dan 0: Profesionalna struktura projekta
 - ✅ Dan 1: Prvi Python moduli - Vasa može da pozdravi!
 - ✅ Dan 2: Razumevanje AI API-ja - simulacija komunikacije
-- ⏳ Dan 3: Dobijanje pravog API ključa (sutra)
+- ✅ Dan 3: API ključ dobijen (OpenAI ili Gemini) i bezbedno sačuvan
+- ⏳ Dan 4: Prvi pravi AI poziv (sutra)
 
+## 🤖 Podržani AI servisi
+
+Učitelj Vasa podržava:
+- **OpenAI GPT-3.5** - Industrijski standard (potreban $5 kredit)
+- **Google Gemini 1.5 Flash** - Besplatna alternativa
+
+Prebacivanje između servisa je jednostavno - samo promeni `AI_PROVIDER` u `.env` fajlu!
 
 
 ## 🛠️ Tehnologije

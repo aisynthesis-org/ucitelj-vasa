@@ -1,5 +1,35 @@
 # Razvojni Dnevnik - Učitelj Vasa
 
+## Dan 3: Dobijanje i čuvanje API ključa - Multi-provider podrška (15.01.2025)
+
+### Šta je urađeno:
+- ✅ Dodata podrška za OpenAI i Gemini API servise
+- ✅ Kreiran univerzalni Config modul koji radi sa oba
+- ✅ API ključ bezbedno sačuvan u .env
+- ✅ Implementirano elegantno prebacivanje između servisa
+- ✅ test_api_key.py prikazuje info za oba servisa
+- ✅ main.py ažuriran sa provider-aware porukama
+
+### Naučene lekcije:
+- OpenAI više ne daje besplatne kredite (januar 2025)
+- Gemini je odlična besplatna alternativa
+- Univerzalni Config dizajn omogućava laku ekstenziju
+- Type hints (`Literal`) poboljšavaju sigurnost koda
+
+### Problemi i rešenja:
+- **Problem**: Kako elegantno podržati dva različita API servisa?
+- **Rešenje**: AI_PROVIDER varijabla + get_api_key() / get_model() metode
+
+### Izbor servisa:
+- **OpenAI**: $5 investicija, industrijski standard, najbolja dokumentacija
+- **Gemini**: Potpuno besplatno, moderni model, velikodušni limiti
+
+### Za sutra (Dan 4):
+- Instalacija biblioteka (openai ili google-generativeai)
+- Kreiranje wrapper funkcije za univerzalne pozive
+- Prvi pravi AI poziv - Vasa konačno postaje inteligentan!
+
+
 ## Dan 2: Razumevanje AI API-ja (15.06.2025)
 
 ### Šta je urađeno:
