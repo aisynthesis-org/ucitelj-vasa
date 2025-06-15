@@ -1,6 +1,29 @@
 # Razvojni Dnevnik - Učitelj Vasa
 
-## Dan 0: Struktura Projekta ([datum])
+## Dan 1: Prvi Python Moduli (15.06.2025)
+
+### Šta je urađeno:
+- ✅ Kreiran vasa_core.py sa osnovnim funkcionalnostima
+- ✅ Implementirane funkcije: pozdrav(), predstavi_se(), glavni_meni()
+- ✅ Kreiran main.py sa glavnom programskom petljom
+- ✅ Dodate type hints za bolje razumevanje koda
+- ✅ Učitelj Vasa može da komunicira kroz konzolu!
+
+### Naučene lekcije:
+- Python moduli su jednostavno .py fajlovi
+- Funkcije grupišu kod koji obavlja specifičan zadatak
+- f-stringovi omogućavaju lako formatiranje teksta
+- if __name__ == "__main__" omogućava dvostruku upotrebu fajla
+
+### Problemi i rešenja:
+- **Problem**: Import error pri pokretanju
+- **Rešenje**: Označen src folder kao Sources Root
+
+### Za sutra (Dan 2):
+- Razumevanje kako AI API-ji funkcionišu
+- Priprema za integraciju sa OpenAI
+
+## Dan 0: Struktura Projekta 14.06.2025.
 
 ### Šta je urađeno:
 - ✅ Kreirana profesionalna folder struktura

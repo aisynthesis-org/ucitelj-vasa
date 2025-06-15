@@ -11,7 +11,9 @@ Cilj je pomoći početnicima da savladaju osnove programiranja kroz interakciju 
 - ✅ Dan -2: PyCharm unified edition podešen
 - ✅ Dan -1: GitHub repository kreiran
 - ✅ Dan 0: Profesionalna struktura projekta
-- ⏳ Dan 1: Prvi Python modul (sutra)
+- ✅ Dan 1: Prvi Python moduli - Vasa može da pozdravi!
+- ⏳ Dan 2: Razumevanje AI API-ja (sutra)
+
 
 ## 🛠️ Tehnologije
 
