@@ -19,8 +19,8 @@ Cilj je pomoći početnicima da savladaju osnove programiranja kroz interakciju 
 ## 🤖 Podržani AI servisi
 
 Učitelj Vasa podržava:
-- **OpenAI GPT-3.5** - Industrijski standard (potreban $5 kredit)
-- **Google Gemini 1.5 Flash** - Besplatna alternativa
+- **OpenAI GPT-4.1** - Industrijski standard (potreban $5 kredit)
+- **Google Gemini 2.0 Flash** - Besplatna alternativa
 
 Prebacivanje između servisa je jednostavno - samo promeni `AI_PROVIDER` u `.env` fajlu!
 
