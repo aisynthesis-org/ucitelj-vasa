@@ -2,7 +2,7 @@
 
 ## 📚 O Projektu
 
-Učitelj Vasa je AI-powered asistent kreiran kroz 28-dnevni praktični kurs AISYNTHESIS akademije. 
+Učitelj Vasa je AI-powered asistent kreiran kroz 28-dnevni praktični kurs AI SYNTHESIS akademije. 
 Cilj je pomoći početnicima da savladaju osnove programiranja kroz interakciju sa AI asistentom.
 
 ## 🚀 Trenutni Status
@@ -15,46 +15,46 @@ Cilj je pomoći početnicima da savladaju osnove programiranja kroz interakciju 
 
 ## 🛠️ Tehnologije
 
-- Python 3.13+
-- PyCharm** unified edition
-- python-dotenv za environment varijable
+- **Python** 3.13+
+- **PyCharm** unified edition
+- **python-dotenv** za environment varijable
 - Uskoro: OpenAI API, FastAPI, SQLite
 
 ## 📁 Struktura Projekta
 
-ucitelj-vasa/
-├── src/ # Izvorni kod
-│ ├── init.py
-│ ├── ai_services/ # AI integracije
-│ ├── web_api/ # Web API (od nedelje 2)
-│ └── utils/ # Pomoćne funkcije
-├── tests/ # Testovi
-├── docs/ # Dokumentacija
-├── .env # Environment varijable (ne commit-uj!)
-├── .gitignore # Git ignore pravila
-├── requirements.txt # Python dependencies
-└── README.md # Ovaj fajl
+    ucitelj-vasa/
+    ├── src/                    # Izvorni kod
+    │   ├── __init__.py
+    │   ├── ai_services/       # AI integracije
+    │   ├── web_api/          # Web API (od nedelje 2)
+    │   └── utils/            # Pomoćne funkcije
+    ├── tests/                 # Testovi
+    ├── docs/                  # Dokumentacija
+    ├── .env                   # Environment varijable (ne commit-uj!)
+    ├── .gitignore            # Git ignore pravila
+    ├── requirements.txt      # Python dependencies
+    └── README.md            # Ovaj fajl
 
-🔧 Instalacija
+## 🔧 Instalacija
 
 1. Kloniraj repository:
- 
-git clone https://github.com/[tvoj-username]/ucitelj-vasa.git
-cd ucitelj-vasa
- 
+
+    git clone https://github.com/aisynthesis-org/ucitelj-vasa.git
+    cd ucitelj-vasa
+
 2. Kreiraj virtuelno okruženje (preporučeno):
 
-python -m venv venv
-source venv/bin/activate # Na Windows: venv\Scripts\activate
+    python -m venv venv
+    source venv/bin/activate  # Na Windows: venv\Scripts\activate
 
 3. Instaliraj dependencies:
 
-pip install -r requirements.txt
+    pip install -r requirements.txt
 
-👤 Autor
+## 👤 Autor
 
-[Tvoje ime] - Student AISYNTHESIS akademije
+Radoje Đorda - AI SYNTHESIS akademija
 
-📄 Licenca
+## 📄 Licenca
 
 MIT License - slobodno koristi za učenje!
