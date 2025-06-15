@@ -1,6 +1,6 @@
 # Razvojni Dnevnik - Učitelj Vasa
 
-## Dan 3: Dobijanje i čuvanje API ključa - Multi-provider podrška (15.01.2025)
+## Dan 3: Dobijanje i čuvanje API ključa - Multi-provider podrška (15.06.2025)
 
 ### Šta je urađeno:
 - ✅ Dodata podrška za OpenAI i Gemini API servise
