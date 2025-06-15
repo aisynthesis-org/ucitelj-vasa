@@ -12,7 +12,9 @@ Cilj je pomoći početnicima da savladaju osnove programiranja kroz interakciju 
 - ✅ Dan -1: GitHub repository kreiran
 - ✅ Dan 0: Profesionalna struktura projekta
 - ✅ Dan 1: Prvi Python moduli - Vasa može da pozdravi!
-- ⏳ Dan 2: Razumevanje AI API-ja (sutra)
+- ✅ Dan 2: Razumevanje AI API-ja - simulacija komunikacije
+- ⏳ Dan 3: Dobijanje pravog API ključa (sutra)
+
 
 
 ## 🛠️ Tehnologije

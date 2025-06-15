@@ -1,5 +1,30 @@
 # Razvojni Dnevnik - Učitelj Vasa
 
+## Dan 2: Razumevanje AI API-ja (15.06.2025)
+
+### Šta je urađeno:
+- ✅ Kreiran ai_simulator.py za demonstraciju API koncepta
+- ✅ Implementirana simulacija AI odgovora sa kašnjenjem
+- ✅ Dodata demonstracija API strukture (JSON format)
+- ✅ Kreiran api_key_info.py sa sigurnosnim uputstvima
+- ✅ Ažuriran main.py sa novim opcijama
+
+### Naučene lekcije:
+- API omogućava programima da komuniciraju preko interneta
+- JSON je univerzalni format za razmenu podataka
+- AI servisi koriste role-based sistem za kontrolu ponašanja
+- API ključevi su kao lozinke i moraju se čuvati sigurno
+
+### Problemi i rešenja:
+- **Problem**: Kako objasniti API bez stvarnog poziva?
+- **Rešenje**: Kreirana simulacija koja pokazuje strukturu i kašnjenje
+
+### Za sutra (Dan 3):
+- Registracija na OpenAI platform.openai.com
+- Dobijanje pravog API ključa
+- Čuvanje ključa u .env fajl
+
+
 ## Dan 1: Prvi Python Moduli (15.06.2025)
 
 ### Šta je urađeno:
