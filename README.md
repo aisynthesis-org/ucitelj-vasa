@@ -13,8 +13,34 @@ Cilj je pomoći početnicima da savladaju osnove programiranja kroz interakciju 
 - ✅ Dan 0: Profesionalna struktura projekta
 - ✅ Dan 1: Prvi Python moduli - Vasa može da pozdravi!
 - ✅ Dan 2: Razumevanje AI API-ja - simulacija komunikacije
-- ✅ Dan 3: API ključ dobijen (OpenAI ili Gemini) i bezbedno sačuvan
-- ⏳ Dan 4: Prvi pravi AI poziv (sutra)
+- ✅ Dan 3: Multi-provider podrška - OpenAI i Gemini
+- ✅ Dan 4: Prvi AI poziv - Vasa govori preko OpenAI ili Gemini! 🤖
+- ⏳ Dan 5: Dodavanje ličnosti i prilagođavanje odgovora (sutra)
+
+## 🎯 Trenutne mogućnosti
+
+Učitelj Vasa sada može:
+- ✨ Odgovarati na pitanja koristeći OpenAI GPT ili Google Gemini
+- 🔄 Prebacivati između AI servisa tokom rada
+- 💬 Voditi kontinuirane razgovore sa kontekstom
+- 🎓 Objašnjavati programske koncepte na srpskom jeziku
+- 🔄 Raditi u offline modu sa simulacijom ako AI nije dostupan
+- 🛡️ Automatski rešavati SSL probleme na Windows sistemima
+
+## 🤖 Arhitektura
+
+    main.py
+    ├── AIServiceFactory
+    ├── OpenAIService (sa SSL fix-om)
+    ├── GeminiService
+
+## ⚠️ Poznati problemi i rešenja
+
+### SSL problemi na Windows-u
+Ako dobiješ `[Errno 2] No such file or directory` grešku sa OpenAI:
+1. ssl_fix.py automatski rešava većinu problema
+2. Restartuj PyCharm/terminal ako problemi potraju
+3. Koristi Gemini kao alternativu
 
 ## 🤖 Podržani AI servisi
 

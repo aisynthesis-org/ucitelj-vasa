@@ -1,5 +1,43 @@
 # Razvojni Dnevnik - Učitelj Vasa
 
+## Dan 4: Prvi AI poziv - univerzalna podrška! (16.06.2025)
+
+### Šta je urađeno:
+- ✅ Instalirane obe AI biblioteke (openai i google-generativeai)
+- ✅ Kreiran ssl_fix.py modul za rešavanje SSL problema
+- ✅ Kreiran BaseAIService interfejs
+- ✅ Implementiran OpenAIService sa automatskim SSL fix-om
+- ✅ Implementiran GeminiService sa istim interfejsom
+- ✅ Kreiran AIServiceFactory sa Singleton pattern-om
+- ✅ main.py koristi factory za automatski izbor servisa
+- ✅ Dodata opcija promene servisa tokom rada
+- ✅ Kontinuirani razgovor radi sa oba servisa
+
+### Naučene lekcije:
+- Environment varijable mogu da interferiraju sa bibliotekama
+- SSL problemi su česti na Windows sistemima
+- Factory pattern omogućava elegantno upravljanje više servisa
+- Isti interfejs (BaseAIService) čini servise zamenljivim
+- Singleton pattern štedi resurse
+- Error handling mora biti specifičan za svaki servis
+- Defensive programming predviđa i rešava probleme pre nego što se jave
+
+### Problemi i rešenja:
+- **Problem**: [Errno 2] No such file or directory sa OpenAI
+- **Rešenje**: Kreiran ssl_fix.py koji čisti problematične environment varijable
+- **Lekcija**: Environment pollution je realan problem u produkciji
+
+### Testiranje:
+- OpenAI: Brži odgovori, kraći, precizniji
+- Gemini: Detaljniji odgovori, ponekad previše opširni
+- SSL fix: Rešava probleme na većini Windows sistema
+
+### Za sutra (Dan 5):
+- Proširivanje Vasine ličnosti
+- Fine-tuning parametara za oba servisa
+- Dodavanje "modova" ponašanja
+
+
 ## Dan 3: Dobijanje i čuvanje API ključa - Multi-provider podrška (15.06.2025)
 
 ### Šta je urađeno:

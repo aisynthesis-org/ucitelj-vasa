@@ -1,0 +1,52 @@
+"""
+Bazna klasa za sve AI servise
+Definiše interfejs koji svi servisi moraju implementirati
+"""
+
+from abc import ABC, abstractmethod
+from typing import Optional, List, Dict
+
+
+class BaseAIService(ABC):
+    """Apstraktna bazna klasa za AI servise."""
+
+    @abstractmethod
+    def pozovi_ai(self, poruka: str, system_prompt: Optional[str] = None) -> str:
+        """
+        Šalje poruku AI-ju i vraća odgovor.
+
+        Args:
+            poruka: Korisnikova poruka/pitanje
+            system_prompt: Opcioni system prompt za definisanje ponašanja
+
+        Returns:
+            AI odgovor kao string
+        """
+        pass
+
+    @abstractmethod
+    def pozovi_sa_istorijom(self, messages: List[Dict[str, str]]) -> str:
+        """
+        Šalje celu istoriju razgovora AI-ju.
+
+        Args:
+            messages: Lista poruka sa 'role' i 'content' ključevima
+
+        Returns:
+            AI odgovor kao string
+        """
+        pass
+
+    def test_konekcija(self) -> bool:
+        """
+        Testira da li servis može da se poveže sa API-jem.
+
+        Returns:
+            True ako je konekcija uspešna, False inače
+        """
+        try:
+            response = self.pozovi_ai("Reci 'zdravo' na srpskom.")
+            return len(response) > 0
+        except Exception as e:
+            print(f"❌ Test konekcije neuspešan: {e}")
+            return False
