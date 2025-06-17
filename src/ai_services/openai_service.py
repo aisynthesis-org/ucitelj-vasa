@@ -24,7 +24,8 @@ from typing import Optional, List, Dict
 from openai import OpenAI
 from utils.config import Config
 from .base_service import BaseAIService
-
+# Dodaj na početak importa
+from utils.performance_tracker import tracker
 
 class OpenAIService(BaseAIService):
     """Servis za komunikaciju sa OpenAI API-jem."""
@@ -64,6 +65,74 @@ class OpenAIService(BaseAIService):
         Returns:
             AI odgovor kao string
         """
+
+        # Počni praćenje
+        tracking_id = tracker.start_tracking("openai", self.model, "chat_completion")
+
+        try:
+            # Pripremi poruke
+            messages = []
+
+            if system_prompt:
+                messages.append({
+                    "role": "system",
+                    "content": system_prompt
+                })
+
+            messages.append({
+                "role": "user",
+                "content": poruka
+            })
+
+            # Pozovi API
+            response = self.client.chat.completions.create(
+                model=self.model,
+                messages=messages,
+                max_tokens=self.max_tokens,
+                temperature=self.temperature
+            )
+
+            result = response.choices[0].message.content.strip()
+
+            # Završi praćenje - uspešno
+            tracker.end_tracking(
+                tracking_id,
+                success=True,
+                response_length=len(result),
+                additional_data={
+                    "prompt_length": len(poruka),
+                    "temperature": self.temperature,
+                    "max_tokens": self.max_tokens
+                }
+            )
+
+            return result
+
+        except Exception as e:
+            # Završi praćenje - neuspešno
+            tracker.end_tracking(
+                tracking_id,
+                success=False,
+                error=str(e)
+            )
+
+            # Postojeći error handling...
+            error_msg = f"Greška pri komunikaciji sa OpenAI: {str(e)}"
+            print(f"❌ {error_msg}")
+
+            if "api_key" in str(e).lower():
+                return "Izgleda da OpenAI API ključ nije valjan. Proveri podešavanja."
+            elif "rate_limit" in str(e).lower():
+                return "Previše zahteva ka OpenAI. Sačekaj malo pa pokušaj ponovo."
+            elif "insufficient_quota" in str(e).lower():
+                return "Nemaš dovoljno OpenAI kredita. Proveri svoj balans ili prebaci se na Gemini (AI_PROVIDER=gemini)."
+            elif "connection" in str(e).lower():
+                return "Problem sa internet konekcijom. Proveri da li si povezan."
+            elif "SSL" in str(e) or "certificate" in str(e).lower():
+                return "SSL problem - restartuj program ili koristi Gemini servis."
+            else:
+                return "Ups! Nešto je pošlo po zlu sa OpenAI. Pokušaj ponovo za koji trenutak."
+
         try:
             # Pripremi poruke
             messages = []

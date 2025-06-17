@@ -14,18 +14,32 @@ Cilj je pomoći početnicima da savladaju osnove programiranja kroz interakciju 
 - ✅ Dan 1: Prvi Python moduli - Vasa može da pozdravi!
 - ✅ Dan 2: Razumevanje AI API-ja - simulacija komunikacije
 - ✅ Dan 3: Multi-provider podrška - OpenAI i Gemini
-- ✅ Dan 4: Prvi AI poziv - Vasa govori preko OpenAI ili Gemini! 🤖
-- ⏳ Dan 5: Dodavanje ličnosti i prilagođavanje odgovora (sutra)
+- ✅ Dan 4: Prvi AI poziv - univerzalni sistem sa SSL fix-om
+- ✅ Dan 5: Profilisanje i optimizacija - automatski izbor najboljih postavki! 📊
+- ⏳ Dan 6: Rukovanje greškama i resilijentnost (sutra)
 
 ## 🎯 Trenutne mogućnosti
 
 Učitelj Vasa sada može:
-- ✨ Odgovarati na pitanja koristeći OpenAI GPT ili Google Gemini
-- 🔄 Prebacivati između AI servisa tokom rada
-- 💬 Voditi kontinuirane razgovore sa kontekstom
-- 🎓 Objašnjavati programske koncepte na srpskom jeziku
-- 🔄 Raditi u offline modu sa simulacijom ako AI nije dostupan
-- 🛡️ Automatski rešavati SSL probleme na Windows sistemima
+- ✨ Odgovarati koristeći OpenAI ili Gemini
+- 🔄 Prebacivati između servisa tokom rada
+- 💬 Voditi kontinuirane razgovore
+- 📊 **NOVO**: Meriti performanse svakog poziva
+- 🎯 **NOVO**: Automatski optimizovati parametre prema tipu pitanja
+- 🏁 **NOVO**: Pokretati benchmark testove
+- 📈 **NOVO**: Generisati izveštaje o performansama
+- 🎨 **NOVO**: Koristiti 7 različitih profila rada
+
+## 📊 Optimizacioni profili
+
+- **Brzi odgovor**: Kratki, direktni odgovori (temp: 0.3, max: 100)
+- **Detaljno objašnjenje**: Opširna objašnjenja (temp: 0.7, max: 500)
+- **Generisanje koda**: Precizno, bez greške (temp: 0.2, max: 400)
+- **Kreativno pisanje**: Maštoviti sadržaj (temp: 1.2, max: 600)
+- **Debug pomoć**: Sistematska analiza (temp: 0.3, max: 300)
+- **Prevođenje**: Tačni prevodi (temp: 0.1, max: 200)
+- **Rezimiranje**: Sažeti prikazi (temp: 0.4, max: 200)
+
 
 ## 🤖 Arhitektura
 

@@ -1,23 +1,27 @@
 """
 Glavni program za Učitelja Vasu
-Univerzalna podrška za OpenAI i Gemini
+Sa podrškom za profilisanje i optimizaciju
 """
 
 # Dodaj src folder u Python path
 import sys
 import os
-
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 
 from vasa_core import pozdrav, predstavi_se, glavni_meni, VASA_LICNOST
 from ai_simulator import simuliraj_ai_odgovor
 from utils.config import Config
+from utils.performance_tracker import tracker
+from utils.optimization_profiles import profile_manager, ProfileType
+from utils.ai_benchmark import AIBenchmark
 from ai_services.ai_factory import AIServiceFactory
 from ai_services.base_service import BaseAIService
 from typing import Optional
 
+
 # Globalna varijabla za AI servis
 ai_service: Optional[BaseAIService] = None
+current_profile: Optional[ProfileType] = None
 
 
 def inicijalizuj_ai_servis():
@@ -36,103 +40,368 @@ def inicijalizuj_ai_servis():
     return False
 
 
-def postavi_pitanje_vasi(pitanje: str) -> str:
-    """Postavlja pitanje Vasi koristeći AI ili simulaciju."""
+def postavi_pitanje_vasi(pitanje: str, auto_optimize: bool = True) -> str:
+    """
+    Postavlja pitanje Vasi koristeći AI ili simulaciju.
+
+    Args:
+        pitanje: Korisnikovo pitanje
+        auto_optimize: Da li automatski optimizovati postavke
+
+    Returns:
+        AI odgovor
+    """
+    global current_profile
+
     if ai_service:
+        # Analiziraj pitanje i primeni profil ako treba
+        if auto_optimize:
+            suggested_profile = profile_manager.analyze_question(pitanje)
+
+            # Prikaži koji profil se koristi
+            profile_info = profile_manager.get_profile(suggested_profile)
+            print(f"📋 [Koristim profil: {profile_info.name}]")
+
+            # Primeni profil
+            settings = profile_manager.apply_profile(
+                suggested_profile,
+                ai_service.get_current_settings()
+            )
+            ai_service.apply_settings(settings)
+            current_profile = suggested_profile
+
+            # Modifikuj system prompt sa addon-om
+            modified_prompt = VASA_LICNOST + profile_info.system_prompt_addon
+        else:
+            modified_prompt = VASA_LICNOST
+
         # Koristi pravi AI
         print(f"🤖 [Koristim {Config.AI_PROVIDER.upper()} AI model...]")
-        return ai_service.pozovi_ai(pitanje, system_prompt=VASA_LICNOST)
+        return ai_service.pozovi_ai(pitanje, system_prompt=modified_prompt)
     else:
         # Fallback na simulaciju
         print("🎭 [Koristim simulaciju...]")
         return simuliraj_ai_odgovor(pitanje)
 
 
+def prikazi_performanse():
+    """Prikazuje statistiku performansi."""
+    print("\n" + tracker.compare_providers())
+
+    # Prikaži preporuke
+    recommendations = tracker.get_recommendations()
+    if recommendations:
+        print("💡 PREPORUKE NA OSNOVU ANALIZE:")
+        for scenario, rec in recommendations.items():
+            print(f"   • {scenario.replace('_', ' ').title()}: {rec}")
+
+
+def upravljanje_profilima():
+    """Omogućava upravljanje optimizacionim profilima."""
+    while True:
+        print("\n🎯 UPRAVLJANJE PROFILIMA")
+        print("=" * 50)
+        print(profile_manager.list_profiles())
+
+        print("Opcije:")
+        print("1. Testiraj profil sa prilagođenim pitanjem")
+        print("2. Uporedi profile")
+        print("3. Vrati se u glavni meni")
+
+        izbor = input("\nTvoj izbor: ").strip()
+
+        if izbor == "1":
+            print("\nIzaberi profil (1-7): ", end="")
+            try:
+                profile_idx = int(input().strip()) - 1
+                profile_type = list(ProfileType)[profile_idx]
+
+                print(f"\nUnesi pitanje za testiranje: ", end="")
+                test_pitanje = input().strip()
+
+                if test_pitanje:
+                    # Primeni profil i testiraj
+                    odgovor = postavi_pitanje_vasi(test_pitanje, auto_optimize=False)
+
+                    # Ručno primeni izabrani profil
+                    settings = profile_manager.apply_profile(
+                        profile_type,
+                        ai_service.get_current_settings()
+                    )
+                    ai_service.apply_settings(settings)
+
+                    print(f"\n🤖 Odgovor sa profilom '{profile_manager.get_profile(profile_type).name}':")
+                    print(odgovor)
+
+            except (ValueError, IndexError):
+                print("❌ Nevaljan izbor profila.")
+
+        elif izbor == "2":
+            print("\nUnesi pitanje za poređenje: ", end="")
+            test_pitanje = input().strip()
+
+            if test_pitanje and ai_service:
+                print("\n📊 POREĐENJE PROFILA")
+                print("=" * 50)
+
+                original_settings = ai_service.get_current_settings()
+
+                for profile_type in [ProfileType.QUICK_ANSWER,
+                                   ProfileType.DETAILED_EXPLANATION]:
+                    profile = profile_manager.get_profile(profile_type)
+
+                    # Primeni profil
+                    settings = profile_manager.apply_profile(
+                        profile_type,
+                        original_settings
+                    )
+                    ai_service.apply_settings(settings)
+
+                    print(f"\n🎯 {profile.name}:")
+                    print(f"   Temperature: {settings['temperature']}")
+                    print(f"   Max tokens: {settings['max_tokens']}")
+
+                    # Dobij odgovor
+                    modified_prompt = VASA_LICNOST + profile.system_prompt_addon
+                    odgovor = ai_service.pozovi_ai(test_pitanje, modified_prompt)
+
+                    print(f"   Odgovor ({len(odgovor)} karaktera):")
+                    print(f"   {odgovor[:200]}..." if len(odgovor) > 200 else f"   {odgovor}")
+
+                # Vrati originalne postavke
+                ai_service.apply_settings(original_settings)
+
+        elif izbor == "3":
+            break
+        else:
+            print("❌ Nepoznata opcija.")
+
+
+def pokreni_benchmark():
+    """Pokreće benchmark testiranje."""
+    print("\n🏁 BENCHMARK TESTIRANJE")
+    print("=" * 50)
+
+    if not (Config.OPENAI_API_KEY and Config.GEMINI_API_KEY):
+        print("❌ Za benchmark su potrebna oba API ključa!")
+        print("   Trenutno imaš:")
+        if Config.OPENAI_API_KEY:
+            print("   ✓ OpenAI")
+        if Config.GEMINI_API_KEY:
+            print("   ✓ Gemini")
+        return
+
+    print("⚠️  Benchmark će pokrenuti seriju testova na oba servisa.")
+    print("   Ovo može potrajati nekoliko minuta.")
+    print("\nDa li želiš da nastaviš? (da/ne): ", end="")
+
+    if input().strip().lower() in ['da', 'd', 'yes', 'y']:
+        benchmark = AIBenchmark()
+        results_file = benchmark.run_full_benchmark()
+
+        if results_file:
+            print(f"\n📁 Detaljni rezultati sačuvani u: {results_file}")
+
+
 def kontinuirani_razgovor():
-    """Omogućava kontinuirani razgovor sa Vasom."""
+    """Omogućava kontinuiranu konverzaciju sa Učiteljem Vasom."""
     print("\n💬 KONTINUIRANI RAZGOVOR SA UČITELJEM VASOM")
     print("=" * 50)
-    print("Možeš postavljati pitanja jedno za drugim.")
-    print("Ukucaj 'kraj' ili 'exit' za povratak u glavni meni.\n")
+    print("Sada možeš da razgovaraš sa mnom kao sa pravim učiteljem!")
+    print("Pamtiću kontekst našeg razgovora.")
+    print("Kucaj 'izlaz' ili 'exit' kada želiš da završiš razgovor.\n")
 
-    # Istorija razgovora za kontekst
-    istorija = []
-
-    # Dodaj system prompt u istoriju
-    if ai_service:
-        istorija.append({
-            "role": "system",
-            "content": VASA_LICNOST
-        })
+    # Istorija razgovora
+    conversation_history = []
 
     while True:
         # Korisnikov unos
-        pitanje = input("\n👤 Ti: ").strip()
+        pitanje = input("👤 Ti: ").strip()
 
         # Proveri da li korisnik želi da izađe
-        if pitanje.lower() in ['kraj', 'exit', 'izlaz', 'nazad']:
-            print("\n👋 Vraćam te u glavni meni...")
+        if pitanje.lower() in ['izlaz', 'exit', 'kraj', 'quit']:
+            print("\n👋 Hvala na razgovoru! Vraćam te u glavni meni.\n")
             break
 
         if not pitanje:
-            print("❌ Molim te ukucaj pitanje.")
+            print("💭 Molim te, postavi pitanje ili napiši komentar.\n")
             continue
 
-        # Dodaj pitanje u istoriju
-        istorija.append({
+        # Dodaj korisnikovo pitanje u istoriju
+        conversation_history.append({
             "role": "user",
             "content": pitanje
         })
 
-        # Dobij odgovor
-        if ai_service and len(istorija) > 1:  # Ima bar system + user poruku
-            print("\n🤖 Učitelj Vasa: ", end="", flush=True)
-            odgovor = ai_service.pozovi_sa_istorijom(istorija)
+        print("\n🤖 Učitelj Vasa: ", end="", flush=True)
+
+        try:
+            if ai_service:
+                # Pripremi system prompt sa kontekstom
+                system_prompt_with_context = VASA_LICNOST + "\n\nVodi računa o kontekstu prethodnog razgovora."
+
+                # Koristi istoriju razgovora
+                odgovor = ai_service.pozovi_sa_istorijom([
+                    {"role": "system", "content": system_prompt_with_context},
+                    *conversation_history
+                ])
+
+                # Dodaj Vasin odgovor u istoriju
+                conversation_history.append({
+                    "role": "assistant",
+                    "content": odgovor
+                })
+
+                # Ograniči istoriju na poslednjih 10 razmena (20 poruka)
+                if len(conversation_history) > 20:
+                    conversation_history = conversation_history[-20:]
+
+            else:
+                # Fallback na simulaciju
+                odgovor = simuliraj_ai_odgovor(pitanje)
+
+            print(odgovor)
+
+        except Exception as e:
+            print(f"\n❌ Greška: {e}")
+            print("Pokušaj ponovo sa drugim pitanjem.")
+
+        print()  # Prazan red za preglednost
+
+
+def prikazi_ai_status():
+    """Prikazuje trenutni status AI servisa."""
+    print("\n🔍 STATUS AI SERVISA")
+    print("=" * 50)
+
+    # Trenutni provider
+    print(f"📡 Trenutni provider: {Config.AI_PROVIDER.upper()}")
+
+    # Status servisa
+    if ai_service:
+        print("✅ AI servis je aktivan")
+
+        # Trenutne postavke
+        settings = ai_service.get_current_settings()
+        print(f"🤖 Model: {settings.get('model', 'nepoznat')}")
+        print(f"🌡️ Temperature: {settings.get('temperature', 'N/A')}")
+        print(f"📏 Max tokena: {settings.get('max_tokens', 'N/A')}")
+
+        # Test konekcije
+        print("\n🔌 Testiram konekciju...")
+        if ai_service.test_konekcija():
+            print("✅ Konekcija sa AI servisom je stabilna!")
         else:
-            print("\n🎭 Učitelj Vasa: ", end="", flush=True)
-            odgovor = simuliraj_ai_odgovor(pitanje)
+            print("❌ Problem sa konekcijom. Proveri API ključ i internet vezu.")
+    else:
+        print("❌ AI servis nije aktivan")
+        print("📚 Koristim simulaciju umesto pravog AI-ja")
 
-        print(odgovor)
+    # Dostupni provideri
+    print("\n📋 Dostupni provideri:")
+    if Config.OPENAI_API_KEY:
+        print("   ✓ OpenAI")
+    else:
+        print("   ✗ OpenAI (nedostaje API ključ)")
 
-        # Dodaj odgovor u istoriju
-        istorija.append({
-            "role": "assistant",
-            "content": odgovor
-        })
+    if Config.GEMINI_API_KEY:
+        print("   ✓ Gemini")
+    else:
+        print("   ✗ Gemini (nedostaje API ključ)")
 
-        # Ograniči istoriju na poslednjih 10 poruka + system prompt
-        if len(istorija) > 11:
-            istorija = [istorija[0]] + istorija[-10:]
+    print()  # Prazan red
 
 
 def promeni_ai_servis():
     """Omogućava promenu AI servisa tokom rada."""
+    global ai_service
+
     print("\n🔄 PROMENA AI SERVISA")
     print("=" * 50)
 
-    # Proveri da li su oba ključa dostupna
-    if not (Config.OPENAI_API_KEY and Config.GEMINI_API_KEY):
-        print("❌ Ne možeš menjati servis jer nemaš oba API ključa.")
-        if not Config.OPENAI_API_KEY:
-            print("   - OpenAI ključ nedostaje")
-        if not Config.GEMINI_API_KEY:
-            print("   - Gemini ključ nedostaje")
+    # Prikaži trenutni servis
+    print(f"Trenutno koristiš: {Config.AI_PROVIDER.upper()}")
+
+    # Proveri dostupne opcije
+    dostupni = []
+    if Config.OPENAI_API_KEY:
+        dostupni.append("openai")
+    if Config.GEMINI_API_KEY:
+        dostupni.append("gemini")
+
+    if len(dostupni) < 2:
+        print("\n⚠️ Nemaš konfigurisan drugi AI servis!")
+        print("Potreban ti je API ključ za oba servisa da bi mogao da menjaš između njih.")
         return
 
-    # Prikaži trenutni i dostupne
-    print(f"Trenutno koristiš: {Config.AI_PROVIDER.upper()}")
-    drugi = 'gemini' if Config.AI_PROVIDER == 'openai' else 'openai'
+    # Ponudi opcije
+    print("\nDostupni servisi:")
+    for i, servis in enumerate(dostupni, 1):
+        print(f"{i}. {servis.upper()}")
 
-    print(f"\nDa li želiš da pređeš na {drugi.upper()}? (da/ne): ", end="")
-    odgovor = input().strip().lower()
+    # Zatraži izbor
+    try:
+        izbor = input("\nIzaberi servis (broj): ").strip()
+        idx = int(izbor) - 1
 
-    if odgovor in ['da', 'd', 'yes', 'y']:
-        global ai_service
-        try:
-            ai_service = AIServiceFactory.switch_provider(drugi)
-            print(f"✅ Uspešno prebačeno na {drugi.upper()}!")
-        except Exception as e:
-            print(f"❌ Greška pri prebacivanju: {e}")
+        if 0 <= idx < len(dostupni):
+            novi_servis = dostupni[idx]
+
+            if novi_servis == Config.AI_PROVIDER:
+                print("ℹ️ Već koristiš taj servis!")
+                return
+
+            # Promeni servis
+            Config.AI_PROVIDER = novi_servis
+
+            # Resetuj factory (forsiraj novo kreiranje)
+            AIServiceFactory.reset()
+
+            # Kreiraj novi servis
+            print(f"\n🔄 Prebacujem na {novi_servis.upper()}...")
+            try:
+                ai_service = AIServiceFactory.get_service()
+                print(f"✅ Uspešno prebačeno na {novi_servis.upper()}!")
+
+                # Test konekcije
+                if ai_service.test_konekcija():
+                    print("✅ Novi servis radi perfektno!")
+                else:
+                    print("⚠️ Servis je kreiran ali konekcija nije stabilna.")
+
+            except Exception as e:
+                print(f"❌ Greška pri prebacivanju: {e}")
+                print("Vraćam se na prethodni servis...")
+                # Vrati na stari servis ako ne uspe
+                Config.AI_PROVIDER = "openai" if novi_servis == "gemini" else "gemini"
+                AIServiceFactory.reset()
+                ai_service = AIServiceFactory.get_service()
+        else:
+            print("❌ Nevaljan izbor!")
+
+    except ValueError:
+        print("❌ Molim te unesi broj!")
+    except Exception as e:
+        print(f"❌ Greška: {e}")
+
+
+def glavni_meni_profilisanje():
+    """Vraća prošireni glavni meni."""
+    meni = """
+Šta želiš da uradiš?
+1. Pozdravi me
+2. Predstavi se
+3. Postavi pitanje Učitelju Vasi
+4. Razgovaraj sa Vasom (kontinuirani mod)
+5. Proveri AI status
+6. Promeni AI servis
+7. 📊 Prikaži performanse
+8. 🎯 Upravljaj profilima
+9. 🏁 Pokreni benchmark
+10. Izađi
+
+Tvoj izbor: """
+    return meni
 
 
 def pokreni_vasu():
@@ -148,13 +417,14 @@ def pokreni_vasu():
             'gemini': "✨ Povezan sa Google Gemini - moćan i besplatan!"
         }
         print(provider_info.get(Config.AI_PROVIDER.lower(), "✨ AI je spreman!"))
+        print("🎯 Automatska optimizacija je UKLJUČENA")
     else:
         print("📚 Radim u offline modu sa simulacijom.")
     print("🎓" * 25 + "\n")
 
     # Glavna petlja programa
     while True:
-        print(glavni_meni())
+        print(glavni_meni_profilisanje())
         izbor = input().strip()
 
         if izbor == "1":
@@ -170,6 +440,12 @@ def pokreni_vasu():
                 print("\n🤖 Učitelj Vasa: ", end="", flush=True)
                 odgovor = postavi_pitanje_vasi(pitanje)
                 print(odgovor)
+
+                # Prikaži metrike ako postoje
+                if current_profile and ai_service:
+                    settings = ai_service.get_current_settings()
+                    print(f"\n📊 [Parametri: temp={settings['temperature']}, "
+                         f"max_tokens={settings['max_tokens']}]")
             else:
                 print("\n❌ Nisi uneo pitanje.")
 
@@ -177,33 +453,29 @@ def pokreni_vasu():
             kontinuirani_razgovor()
 
         elif izbor == "5":
-            print("\n" + "=" * 50)
-            print("📊 STATUS AI SERVISA")
-            print("=" * 50)
-            if ai_service:
-                print(f"✅ Aktivan servis: {Config.AI_PROVIDER.upper()}")
-                print(f"🤖 Model: {Config.get_model()}")
-                print(
-                    f"🔥 Temperature: {Config.OPENAI_TEMPERATURE if Config.AI_PROVIDER == 'openai' else Config.GEMINI_TEMPERATURE}")
-                print(
-                    f"📝 Max tokena: {Config.OPENAI_MAX_TOKENS if Config.AI_PROVIDER == 'openai' else Config.GEMINI_MAX_TOKENS}")
-
-                # Troškovi
-                if Config.AI_PROVIDER == 'openai':
-                    print("\n💰 Troškovi: ~$0.002 po 1K tokena")
-                else:
-                    print("\n💰 Troškovi: BESPLATNO! (do 15M tokena dnevno)")
-            else:
-                print("❌ AI servis nije aktivan")
-                print("📚 Koristi se simulacija")
-            print("=" * 50)
+            prikazi_ai_status()
 
         elif izbor == "6":
             promeni_ai_servis()
 
         elif izbor == "7":
+            prikazi_performanse()
+
+        elif izbor == "8":
+            upravljanje_profilima()
+
+        elif izbor == "9":
+            pokreni_benchmark()
+
+        elif izbor == "10":
             print("\nHvala što si koristio Učitelja Vasu! ")
             print("Nastavi sa učenjem i ne zaboravi - svaki ekspert je nekad bio početnik! 🌟")
+
+            # Prikaži finalne statistike ako postoje
+            if ai_service and len(tracker.all_metrics) > 0:
+                print("\n📊 FINALNE STATISTIKE SESIJE:")
+                print(tracker.compare_providers())
+
             break
 
         else:

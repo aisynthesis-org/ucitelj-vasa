@@ -4,7 +4,7 @@ Definiše interfejs koji svi servisi moraju implementirati
 """
 
 from abc import ABC, abstractmethod
-from typing import Optional, List, Dict
+from typing import Optional, List, Dict, Any
 
 
 class BaseAIService(ABC):
@@ -50,3 +50,45 @@ class BaseAIService(ABC):
         except Exception as e:
             print(f"❌ Test konekcije neuspešan: {e}")
             return False
+
+    def apply_settings(self, settings: Dict[str, Any]):
+        """
+        Primenjuje custom postavke na servis.
+
+        Args:
+            settings: Dictionary sa postavkama
+        """
+        # Primeni temperature ako postoji
+        if "temperature" in settings and hasattr(self, "temperature"):
+            self.temperature = settings["temperature"]
+            if hasattr(self, "generation_config"):
+                # Za Gemini, ažuriraj generation_config
+                from google.generativeai import GenerationConfig
+                self.generation_config = GenerationConfig(
+                    max_output_tokens=getattr(self, "max_tokens", 150),
+                    temperature=settings["temperature"]
+                )
+
+        # Primeni max_tokens ako postoji
+        if "max_tokens" in settings and hasattr(self, "max_tokens"):
+            self.max_tokens = settings["max_tokens"]
+            if hasattr(self, "generation_config"):
+                # Za Gemini, ažuriraj generation_config
+                from google.generativeai import GenerationConfig
+                self.generation_config = GenerationConfig(
+                    max_output_tokens=settings["max_tokens"],
+                    temperature=getattr(self, "temperature", 0.7)
+                )
+
+    def get_current_settings(self) -> Dict[str, Any]:
+        """
+        Vraća trenutne postavke servisa.
+
+        Returns:
+            Dict sa trenutnim postavkama
+        """
+        return {
+            "temperature": getattr(self, "temperature", 0.7),
+            "max_tokens": getattr(self, "max_tokens", 150),
+            "model": getattr(self, "model", "unknown")
+        }

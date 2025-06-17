@@ -23,7 +23,8 @@ except ImportError:
 import google.generativeai as genai
 from utils.config import Config
 from .base_service import BaseAIService
-
+# Dodaj na početak importa
+from utils.performance_tracker import tracker
 
 class GeminiService(BaseAIService):
     """Servis za komunikaciju sa Google Gemini API-jem."""
@@ -60,6 +61,61 @@ class GeminiService(BaseAIService):
         Returns:
             AI odgovor kao string
         """
+
+        # Počni praćenje
+        tracking_id = tracker.start_tracking("gemini", Config.GEMINI_MODEL, "generate_content")
+
+        try:
+            # Gemini kombinuje system prompt i korisničku poruku
+            full_prompt = poruka
+            if system_prompt:
+                full_prompt = f"{system_prompt}\n\nKorisnik: {poruka}\nAsistent:"
+
+            # Generiši odgovor
+            response = self.model.generate_content(
+                full_prompt,
+                generation_config=self.generation_config
+            )
+
+            result = response.text.strip()
+
+            # Završi praćenje - uspešno
+            tracker.end_tracking(
+                tracking_id,
+                success=True,
+                response_length=len(result),
+                additional_data={
+                    "prompt_length": len(full_prompt),
+                    "temperature": self.temperature,
+                    "max_tokens": self.max_tokens
+                }
+            )
+
+            return result
+
+        except Exception as e:
+            # Završi praćenje - neuspešno
+            tracker.end_tracking(
+                tracking_id,
+                success=False,
+                error=str(e)
+            )
+
+            # Postojeći error handling...
+            error_msg = f"Greška pri komunikaciji sa Gemini: {str(e)}"
+            print(f"❌ {error_msg}")
+
+            if "api_key" in str(e).lower():
+                return "Izgleda da Gemini API ključ nije valjan. Proveri podešavanja."
+            elif "rate_limit" in str(e).lower() or "429" in str(e):
+                return "Previše zahteva ka Gemini. Sačekaj malo pa pokušaj ponovo."
+            elif "safety" in str(e).lower():
+                return "Gemini je blokirao odgovor iz sigurnosnih razloga. Pokušaj sa drugim pitanjem."
+            elif "connection" in str(e).lower():
+                return "Problem sa internet konekcijom. Proveri da li si povezan."
+            else:
+                return "Ups! Nešto je pošlo po zlu sa Gemini. Pokušaj ponovo za koji trenutak."
+
         try:
             # Gemini kombinuje system prompt i korisničku poruku
             full_prompt = poruka
