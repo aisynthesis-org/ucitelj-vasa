@@ -5,10 +5,66 @@ Definiše interfejs koji svi servisi moraju implementirati
 
 from abc import ABC, abstractmethod
 from typing import Optional, List, Dict, Any
+import re
 
 
 class BaseAIService(ABC):
     """Apstraktna bazna klasa za AI servise."""
+
+    def pozovi_ai_personalizovano(
+            self,
+            poruka: str,
+            profile: 'UserProfile',  # Forward reference da izbegnemo ciklični import
+            base_system_prompt: str
+    ) -> str:
+        """
+        Poziva AI sa personalizovanim podešavanjima.
+        """
+        # Import ovde da izbegnemo potencijalne ciklične importe
+        from personalization.user_profile import UserProfile
+        from personalization.profile_analyzer import ProfileAnalyzer
+
+        # Generiši personalizovan system prompt
+        analyzer = ProfileAnalyzer()
+
+        # Detektuj temu trenutnog pitanja
+        message_analysis = analyzer.analyze_message(poruka)
+        current_topic = message_analysis["topics"][0] if message_analysis["topics"] else None
+
+        # Dodaj personalizaciju na base prompt
+        personalized_addon = analyzer.generate_personalized_prompt_addon(profile, current_topic)
+        full_system_prompt = f"{base_system_prompt}\n\n{personalized_addon}"
+
+        # Prilagodi parametre prema profilu
+        original_settings = self.get_current_settings()
+
+        # Prilagodi temperature prema skill level
+        if profile.skill_level.value == "beginner":
+            self.apply_settings({"temperature": 0.5})  # Konzistentniji odgovori
+        elif profile.skill_level.value == "advanced":
+            self.apply_settings({"temperature": 0.8})  # Kreativniji odgovori
+
+        # Prilagodi max_tokens prema preferencama
+        if profile.preferences.response_length == "short":
+            self.apply_settings({"max_tokens": 100})
+        elif profile.preferences.response_length == "long":
+            self.apply_settings({"max_tokens": 300})
+
+        try:
+            # Pozovi AI sa personalizovanim postavkama
+            response = self.pozovi_ai(poruka, full_system_prompt)
+
+            # Post-procesiranje prema preferencama
+            if not profile.preferences.code_examples and "```" in response:
+                # Ukloni code blokove ako korisnik ne želi primere
+                response = re.sub(r'```[\s\S]*?```', '[kod primer uklonjen]', response)
+
+            return response
+
+        finally:
+            # Vrati originalne postavke
+            self.apply_settings(original_settings)
+
 
     @abstractmethod
     def pozovi_ai(self, poruka: str, system_prompt: Optional[str] = None) -> str:

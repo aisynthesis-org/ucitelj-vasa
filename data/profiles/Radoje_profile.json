@@ -1,0 +1,20 @@
+{
+  "username": "Radoje",
+  "created_at": "2025-06-18T19:28:37.978833",
+  "skill_level": "beginner",
+  "learning_style": "visual",
+  "preferences": {
+    "response_length": "long",
+    "code_examples": true,
+    "use_analogies": true,
+    "language_mix": "mixed",
+    "detail_level": 5
+  },
+  "total_questions": 0,
+  "topics_count": {},
+  "last_active": "2025-06-18T19:28:37.978847",
+  "session_count": 1,
+  "completed_topics": [],
+  "current_learning_path": null,
+  "achievements": []
+}

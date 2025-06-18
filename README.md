@@ -16,8 +16,27 @@ Cilj je pomoći početnicima da savladaju osnove programiranja kroz interakciju 
 - ✅ Dan 3: Multi-provider podrška - OpenAI i Gemini
 - ✅ Dan 4: Prvi AI poziv - univerzalni sistem sa SSL fix-om
 - ✅ Dan 5: Profilisanje i optimizacija - automatski izbor najboljih postavki
-- ✅ Dan 6: Resilience sistem - retry, circuit breaker, fallback i graceful degradation! 🛡️
-- ⏳ Dan 7: Napredna personalizacija Vase (sutra)
+- ✅ Dan 6: Resilience sistem - retry, circuit breaker, fallback i graceful degradation
+- ✅ Dan 7: Napredna personalizacija - profili, preference i adaptivno učenje! 👤
+- ⏳ Dan 8: Uvod u FastAPI (sutra)
+
+## 👤 Personalizacija
+
+Učitelj Vasa sada:
+- **Pamti korisnike**: Čuva profile sa preferencama
+- **Prepoznaje nivo znanja**: Početnik, srednji, napredni
+- **Prilagođava stil**: Praktičan, vizuelni, teorijski
+- **Prati napredak**: Omiljene teme, dostignuća, statistike
+- **Adaptivno uči**: Prilagođava se tokom razgovora
+
+## 🧠 Arhitektura personalizacije
+
+[Korisnik] → [ProfileManager] → [UserProfile]
+↓ ↓
+[ProfileAnalyzer] → [PersonalizedPrompt]
+↓ ↓
+[AdaptiveEngine] → [AI Response]
+
 
 ## 🛡️ Resilience funkcionalnosti
 
