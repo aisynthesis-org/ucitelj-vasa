@@ -18,26 +18,75 @@ from ai_services.ai_factory import AIServiceFactory
 from ai_services.base_service import BaseAIService
 from typing import Optional
 
+# Dodaj ove importe nakon postojećih
+from utils.circuit_breaker import get_all_circuits_status, CircuitOpenError
+from utils.fallback_manager import fallback_manager
+from utils.retry_handler import smart_retry
 
 # Globalna varijabla za AI servis
 ai_service: Optional[BaseAIService] = None
 current_profile: Optional[ProfileType] = None
 
 
+# Zameni postojeću inicijalizuj_ai_servis funkciju sa:
 def inicijalizuj_ai_servis():
-    """Pokušava da kreira AI servis koristeći factory."""
+    """Pokušava da kreira resilient AI servis."""
     global ai_service
 
-    try:
-        if Config.validate():
-            ai_service = AIServiceFactory.get_service()
-            print(f"✅ {Config.AI_PROVIDER.upper()} servis uspešno pokrenut!")
-            return True
-    except Exception as e:
-        print(f"⚠️ AI servis nije dostupan: {e}")
-        print("Koristićemo simulaciju umesto pravog AI-ja.")
+    print("\n🔧 Inicijalizujem AI servis sa naprednom zaštitom...")
 
-    return False
+    try:
+        # Koristi resilient factory
+        ai_service = AIServiceFactory.create_resilient_service()
+
+        print(f"✅ {Config.AI_PROVIDER.upper()} servis pokrenut sa:")
+        print("   ✓ Retry logikom (automatski pokušaji)")
+        print("   ✓ Circuit breaker zaštitom")
+        print("   ✓ Fallback strategijama")
+        print("   ✓ Graceful degradation podrškom")
+
+        # Test da li radi
+        if ai_service.test_konekcija():
+            print("   ✓ Konekcija stabilna!")
+        else:
+            print("   ⚠️ Konekcija nestabilna, ali sistem će pokušati da radi")
+
+        return True
+
+    except Exception as e:
+        print(f"⚠️ Problem pri inicijalizaciji: {e}")
+        print("📌 Sistem će raditi u degradiranom režimu")
+
+        # Čak i ako inicijalizacija ne uspe, imamo degraded servis
+        from ai_services.ai_factory import DegradedAIService
+        ai_service = DegradedAIService()
+
+        return False
+
+
+# Dodaj novu opciju u glavni_meni_profilisanje funkciju:
+def prikazi_sistem_zdravlje():
+    """Prikazuje zdravlje i status svih resilience komponenti."""
+    print("\n🏥 ZDRAVLJE SISTEMA")
+    print("=" * 60)
+
+    # Circuit breakers status
+    print("\n" + get_all_circuits_status())
+
+    # Fallback statistike
+    print(fallback_manager.get_health_report())
+
+    # Retry statistike
+    if hasattr(ai_service, '_circuit_breaker_call'):
+        cb = ai_service._circuit_breaker_call.circuit_breaker
+        print(f"📊 Pouzdanost glavnog servisa: {100 - cb.stats.get_failure_rate():.1f}%")
+
+    # Degradacija status
+    if hasattr(ai_service, 'get_current_settings'):
+        settings = ai_service.get_current_settings()
+        if settings.get('status') == 'limited_functionality':
+            print("\n⚠️ UPOZORENJE: Sistem radi u DEGRADIRANOM režimu!")
+            print("   Funkcionalnosti su ograničene.")
 
 
 def postavi_pitanje_vasi(pitanje: str, auto_optimize: bool = True) -> str:

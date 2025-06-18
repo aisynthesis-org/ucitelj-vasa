@@ -1,5 +1,43 @@
 # Razvojni Dnevnik - Učitelj Vasa
 
+## Dan 6: Rukovanje greškama i resilijentnost (18.06.2025)
+
+### Šta je urađeno:
+- ✅ Kreiran RetryHandler sa exponential backoff
+- ✅ Implementiran SmartRetry sa statistikama
+- ✅ Kreiran CircuitBreaker sa tri stanja
+- ✅ Implementiran FallbackManager sa lancima
+- ✅ ResilientAIServiceWrapper integrisan u factory
+- ✅ DegradedAIService za emergency situacije
+- ✅ Health monitoring sistem
+- ✅ Test scenariji za sve failure modove
+
+### Naučene lekcije:
+- Greške nisu izuzetak već pravilo u distribuiranim sistemima
+- Exponential backoff sprečava preopterećenje
+- Circuit breaker daje servisu vreme da se oporavi
+- Fallback strategije omogućavaju kontinuitet rada
+- Graceful degradation je bolje od potpunog pada
+- Korisnik uvek treba da dobije NEKI odgovor
+
+### Problemi i rešenja:
+- **Problem**: Kako elegantno integrisati sve resilience komponente?
+- **Rešenje**: Wrapper pattern omogućava dodavanje bez menjanja postojećeg koda
+- **Problem**: Kada retry a kada circuit breaker?
+- **Rešenje**: Retry za pojedinačne pozive, CB za zaštitu celog servisa
+
+### Testiranje:
+- Network issues: Sistem se oporavlja nakon 2-3 pokušaja
+- Circuit breaker: Otvara se nakon 3 greške, recovery nakon 30s
+- Graceful degradation: Osnovni odgovori kada ništa ne radi
+- Fallback chain: Glatko prebacivanje između servisa
+
+### Za sutra (Dan 7):
+- Napredna personalizacija Vase
+- User profili i preference
+- Kontekstualna prilagođavanja
+
+
 ## Dan 5: Profilisanje AI servisa i optimizacija (17.06.2025)
 
 ### Šta je urađeno:

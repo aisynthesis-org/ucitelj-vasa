@@ -8,15 +8,32 @@ Cilj je pomoći početnicima da savladaju osnove programiranja kroz interakciju 
 ## 🚀 Trenutni Status
 
 - ✅ Dan -3: Python 3.13+ instaliran
-- ✅ Dan -2: PyCharm unified edition podešen
+- ✅ Dan -2: PyCharm unified edition podešen  
 - ✅ Dan -1: GitHub repository kreiran
 - ✅ Dan 0: Profesionalna struktura projekta
 - ✅ Dan 1: Prvi Python moduli - Vasa može da pozdravi!
 - ✅ Dan 2: Razumevanje AI API-ja - simulacija komunikacije
 - ✅ Dan 3: Multi-provider podrška - OpenAI i Gemini
 - ✅ Dan 4: Prvi AI poziv - univerzalni sistem sa SSL fix-om
-- ✅ Dan 5: Profilisanje i optimizacija - automatski izbor najboljih postavki! 📊
-- ⏳ Dan 6: Rukovanje greškama i resilijentnost (sutra)
+- ✅ Dan 5: Profilisanje i optimizacija - automatski izbor najboljih postavki
+- ✅ Dan 6: Resilience sistem - retry, circuit breaker, fallback i graceful degradation! 🛡️
+- ⏳ Dan 7: Napredna personalizacija Vase (sutra)
+
+## 🛡️ Resilience funkcionalnosti
+
+Učitelj Vasa sada ima naprednu zaštitu:
+- **Retry logika**: Automatski pokušava ponovo pri privremenim greškama
+- **Circuit Breaker**: Štiti sistem od kaskadnih padova
+- **Fallback strategije**: Primary → Secondary → Simulation → Static
+- **Graceful Degradation**: Radi sa ograničenim mogućnostima umesto pada
+- **Health Monitoring**: Praćenje zdravlja svih komponenti
+
+## 🏥 Sistem stabilnosti
+
+[AI Poziv] → [Retry Wrapper] → [Circuit Breaker] → [Fallback Chain]
+                ↓                    ↓                    ↓
+           (3 pokušaja)      (Zaštita od pada)    (Plan B, C, D)
+
 
 ## 🎯 Trenutne mogućnosti
 
