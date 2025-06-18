@@ -17,8 +17,29 @@ Cilj je pomoći početnicima da savladaju osnove programiranja kroz interakciju 
 - ✅ Dan 4: Prvi AI poziv - univerzalni sistem sa SSL fix-om
 - ✅ Dan 5: Profilisanje i optimizacija - automatski izbor najboljih postavki
 - ✅ Dan 6: Resilience sistem - retry, circuit breaker, fallback i graceful degradation
-- ✅ Dan 7: Napredna personalizacija - profili, preference i adaptivno učenje! 👤
-- ⏳ Dan 8: Uvod u FastAPI (sutra)
+- ✅ Dan 7: Napredna personalizacija - profili, preference i adaptivno učenje
+- ✅ Dan 8: Uvod u FastAPI - Učitelj Vasa je sada web servis! 🌐
+- ⏳ Dan 9: Prvi web endpoint za multi-provider sistem (sutra)
+
+## 🌐 Web API
+
+Učitelj Vasa je sada dostupan kao REST API!
+
+### Pokretanje servera:
+
+### Pokretanje servera:
+`cd src 
+web_api/run_server.py`
+
+### Dostupni endpoint-i:
+* GET / – Osnovne informacije
+* GET /zdravo – Vasin pozdrav
+* GET /o-vasi – Detalji o Učitelju Vasi
+* POST /pitaj – Postavi pitanje
+
+### Dokumentacija:
+* Swagger UI: http://localhost:8000/docs
+* ReDoc: http://localhost:8000/redoc
 
 ## 👤 Personalizacija
 

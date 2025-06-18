@@ -1,5 +1,40 @@
 # Razvojni Dnevnik - Učitelj Vasa
 
+## Dan 8: Uvod u FastAPI (18.06.2025)
+
+### Šta je urađeno:
+- ✅ Instaliran FastAPI i uvicorn
+- ✅ Kreiran prvi web API sa osnovnim endpoint-ima
+- ✅ GET endpoint-i za informacije (/zdravo, /o-vasi)
+- ✅ POST endpoint za pitanja (/pitaj)
+- ✅ Automatska dokumentacija (Swagger UI)
+- ✅ CORS podrška za browser pristup
+- ✅ Integrisan postojeći AI servis
+
+### Naučene lekcije:
+- FastAPI drastično pojednostavljuje kreiranje web API-ja
+- Type hints omogućavaju automatsku dokumentaciju
+- Swagger UI je game-changer za API development
+- ASGI omogućava handling konkurentnih zahteva
+- Convention over Configuration princip čini kod čistijim
+
+### Problemi i rešenja:
+- **Problem**: Module not found greške
+- **Rešenje**: Dodavanje src foldera u Python path
+- **Problem**: Kako integrisati postojeći sistem?
+- **Rešenje**: Endpoint funkcije su thin wrapper oko postojeće logike
+
+### Testiranje:
+- Svi endpoint-i rade kroz Swagger UI
+- Browser može pristupiti GET endpoint-ima
+- POST zahtevi rade sa JSON payload-om
+- CORS omogućava pristup iz browser-a
+
+### Za sutra (Dan 9):
+- Dodati endpoint-e specifične za multi-provider sistem
+- Status endpoint sa provider informacijama
+- Health check za svaki provider
+
 ## Dan 7: Napredna personalizacija Vase (19.06.2025)
 
 ### Šta je urađeno:
