@@ -19,8 +19,32 @@ Cilj je pomoći početnicima da savladaju osnove programiranja kroz interakciju 
 - ✅ Dan 6: Resilience sistem - retry, circuit breaker, fallback i graceful degradation
 - ✅ Dan 7: Napredna personalizacija - profili, preference i adaptivno učenje
 - ✅ Dan 8: Uvod u FastAPI - Učitelj Vasa je sada web servis!
-- ✅ Dan 9: Multi-provider web endpoint-i - transparentnost i monitoring! 📊
-- ⏳ Dan 10: Struktura zahteva i provider routing (sutra)
+- ✅ Dan 9: Multi-provider web endpoint-i - transparentnost i monitoring
+- ✅ Dan 10: Strukturirani zahtevi i inteligentno rutiranje! 🎯
+- ⏳ Dan 11: Validacija sa Pydantic i provider-specific modeli (sutra)
+
+## 🎯 Request Routing
+
+### Tipovi zahteva:
+- `chat` - Obična konverzacija
+- `code` - Generisanje koda
+- `debug` - Pomoć sa greškama
+- `explain` - Objašnjenje koncepata
+- `review` - Pregled koda
+- `translate` - Prevod između jezika
+- `optimize` - Optimizacija koda
+
+### Routing strategije:
+- **Static** - Fiksna pravila po tipu
+- **Performance** - Bazirana na metrikama
+- **LoadBalance** - Round-robin distribucija
+- **Hybrid** - Kombinacija strategija
+
+### API Endpoints:
+- `POST /pitaj` - Napredni endpoint sa rutiranjem
+- `GET /request-types` - Lista podržanih tipova
+- `GET /routing/stats` - Statistika rutiranja
+- `POST /routing/strategy` - Promena strategije
 
 ## 📊 Provider Management API
 

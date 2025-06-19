@@ -4,7 +4,9 @@ Transformiše konzolnu aplikaciju u web servis
 """
 
 from fastapi import FastAPI, HTTPException
-from typing import Dict
+from fastapi.middleware.cors import CORSMiddleware
+from typing import Dict, Any, Optional, Union
+from datetime import datetime
 import sys
 import os
 
@@ -15,6 +17,11 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from vasa_core import pozdrav, predstavi_se, VASA_LICNOST
 from ai_services.ai_factory import AIServiceFactory
 from utils.config import Config
+from utils.performance_tracker import tracker
+
+# Import za routing i request handling
+from web_api.models.request_types import RequestAnalyzer, RequestType, StructuredRequest
+from web_api.models.router import smart_router
 
 # Kreiraj FastAPI instancu
 app = FastAPI(
@@ -23,9 +30,7 @@ app = FastAPI(
     version="1.0.0"
 )
 
-from fastapi.middleware.cors import CORSMiddleware
-
-# Nakon kreiranja app instance, dodaj:
+# Konfiguriši CORS
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],  # U produkciji, navedi specifične domene
@@ -34,14 +39,11 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Globalna varijabla za AI servis
+# Globalne varijable
 ai_service = None
-
-# Dodaj ovu globalnu varijablu nakon ai_service
 startup_time = None
 
 
-# Ažuriraj startup_event da zapamti vreme pokretanja
 @app.on_event("startup")
 async def startup_event():
     """Inicijalizuje AI servis pri pokretanju."""
@@ -58,62 +60,6 @@ async def startup_event():
         print("📌 API će raditi u ograničenom režimu")
 
 
-# Dodaj import za datetime na početak fajla
-from datetime import datetime
-
-# Dodaj import na početak
-from utils.performance_tracker import tracker
-
-
-@app.get("/providers/statistics")
-async def get_provider_statistics():
-    """Vraća osnovne statistike o korišćenju providera."""
-    if not hasattr(tracker, 'all_metrics') or not tracker.all_metrics:
-        return {
-            "message": "Nema dovoljno podataka",
-            "total_requests": 0,
-            "providers": {}
-        }
-
-    # Grupiši podatke po providerima
-    stats = {}
-
-    for metric in tracker.all_metrics:
-        # Koristi dictionary pristup umesto atributa
-        provider = metric.get('provider', 'unknown')  # Promenjeno sa metric.provider
-
-        if provider not in stats:
-            stats[provider] = {
-                "total_requests": 0,
-                "successful_requests": 0,
-                "failed_requests": 0,
-                "total_tokens": 0
-            }
-
-        stats[provider]["total_requests"] += 1
-
-        # Koristi get() metod za bezbedno čitanje
-        if metric.get('success', False):  # Promenjeno sa metric.success
-            stats[provider]["successful_requests"] += 1
-            stats[provider]["total_tokens"] += metric.get('tokens_used', 0)  # Promenjeno
-        else:
-            stats[provider]["failed_requests"] += 1
-
-    # Dodaj procente
-    for provider, data in stats.items():
-        if data["total_requests"] > 0:
-            data["success_rate"] = round(
-                (data["successful_requests"] / data["total_requests"]) * 100,
-                2
-            )
-        else:
-            data["success_rate"] = 0
-
-    return {
-        "total_requests": len(tracker.all_metrics),
-        "providers": stats,
-        "collection_started": tracker.all_metrics[0].get('timestamp') if tracker.all_metrics else None  # Promenjeno
-    }
 @app.get("/")
 async def root():
     """Osnovne informacije o API-ju."""
@@ -190,15 +136,46 @@ async def o_vasi():
     }
 
 
-@app.post("/pitaj")
-async def pitaj_vasu(pitanje_data: Dict[str, str]):
+@app.post("/pitaj",
+    summary="Postavi pitanje sa inteligentnim rutiranjem",
+    description="""
+    Napredni endpoint koji:
+    - Analizira tip pitanja
+    - Bira najbolji AI provider
+    - Optimizuje parametre
+    - Vraća detaljan odgovor sa metapodacima
+    
+    Primer strukturiranog zahteva:
+    ```json
+    {
+        "pitanje": "Napiši funkciju koja sortira listu",
+        "tip": "code",
+        "context": {
+            "programming_language": "python",
+            "user_level": "beginner"
+        }
+    }
+    ```
+    """,
+    response_description="Odgovor sa routing informacijama"
+)
+async def pitaj_vasu(
+    pitanje_data: Union[Dict[str, str], Dict[str, Any]],
+    force_provider: Optional[str] = None,
+    analyze_request: bool = True
+):
     """
-    Postavlja pitanje Učitelju Vasi.
+    Postavlja pitanje Učitelju Vasi sa inteligentnim rutiranjem.
 
-    Očekuje JSON sa poljem:
-    - pitanje: string (obavezno)
+    Podržava:
+    - Jednostavan format: {"pitanje": "..."}
+    - Strukturiran format: {"pitanje": "...", "tip": "code", "context": {...}}
+
+    Query parametri:
+    - force_provider: Forsiraj specifičan provider (openai/gemini)
+    - analyze_request: Da li da analizira i struktuira zahtev (default: true)
     """
-    # Proveri da li postoji pitanje
+    # Osnovna validacija
     if "pitanje" not in pitanje_data:
         raise HTTPException(
             status_code=400,
@@ -213,21 +190,108 @@ async def pitaj_vasu(pitanje_data: Dict[str, str]):
             detail="Pitanje ne može biti prazno"
         )
 
-    # Proveri AI servis
+    # Kreiraj strukturiran zahtev
+    if analyze_request:
+        # Proveri da li je već strukturiran
+        if "tip" in pitanje_data:
+            # Korisnik je poslao strukturiran zahtev
+            try:
+                request_type = RequestType(pitanje_data["tip"])
+            except ValueError:
+                request_type = RequestType.CHAT
+
+            structured_request = StructuredRequest(
+                content=pitanje,
+                request_type=request_type,
+                context=pitanje_data.get("context", {}),
+                preferences=pitanje_data.get("preferences", {})
+            )
+        else:
+            # Analiziraj sirovo pitanje
+            structured_request = RequestAnalyzer.create_structured_request(
+                pitanje,
+                additional_context=pitanje_data.get("context")
+            )
+    else:
+        # Bez analize, tretiraj kao obican chat
+        structured_request = StructuredRequest(
+            content=pitanje,
+            request_type=RequestType.CHAT
+        )
+
+    # Rutiraj zahtev
+    selected_provider, routing_metadata = smart_router.route_request(
+        structured_request,
+        override_provider=force_provider
+    )
+
+    # Proveri da li imamo AI servis
     if not ai_service:
         return {
             "greska": "AI servis trenutno nije dostupan",
-            "savet": "Pokušaj ponovo za nekoliko sekundi"
+            "tip_zahteva": structured_request.request_type.value,
+            "routing": routing_metadata
         }
 
     try:
-        # Jednostavno pozovi AI kao u konzoli
-        odgovor = ai_service.pozovi_ai(pitanje, VASA_LICNOST)
+        # Promeni provider ako je potrebno
+        original_provider = Config.AI_PROVIDER
 
-        return {
+        if selected_provider != original_provider and selected_provider != "simulation":
+            Config.AI_PROVIDER = selected_provider
+            # Reset factory da učita novi provider
+            from ai_services.ai_factory import AIServiceFactory
+            AIServiceFactory.reset()
+            current_service = AIServiceFactory.create_resilient_service()
+        else:
+            current_service = ai_service
+
+        # Dobij optimizovane parametre
+        optimized_params = structured_request.get_optimized_params()
+
+        # Primeni parametre
+        current_service.apply_settings(optimized_params)
+
+        # Generiši poboljšan prompt
+        enhanced_prompt = structured_request.get_enhanced_prompt()
+
+        # Pozovi AI sa personalizacijom ako postoji
+        if hasattr(current_service, 'pozovi_ai_personalizovano'):
+            # Ovde bi trebalo proslediti user profile
+            odgovor = current_service.pozovi_ai(enhanced_prompt)
+        else:
+            odgovor = current_service.pozovi_ai(enhanced_prompt)
+
+        # Vrati originalni provider
+        if selected_provider != original_provider:
+            Config.AI_PROVIDER = original_provider
+            AIServiceFactory.reset()
+
+        # Pripremi response
+        response = {
             "pitanje": pitanje,
-            "odgovor": odgovor
+            "odgovor": odgovor,
+            "tip_zahteva": structured_request.request_type.value,
+            "provider": {
+                "selected": selected_provider,
+                "reason": routing_metadata.get("selected_reason"),
+                "strategy": routing_metadata.get("strategy")
+            },
+            "optimizacija": {
+                "temperature": optimized_params.get("temperature"),
+                "max_tokens": optimized_params.get("max_tokens")
+            }
         }
+
+        # Dodaj kontekst ako postoji
+        if structured_request.context.has_code_context():
+            response["context"] = {
+                "language": structured_request.context.programming_language,
+                "has_code": bool(structured_request.context.code_snippet),
+                "has_error": bool(structured_request.context.error_message)
+            }
+
+        return response
 
     except Exception as e:
         # Loguj grešku ali vrati user-friendly poruku
@@ -235,11 +299,11 @@ async def pitaj_vasu(pitanje_data: Dict[str, str]):
 
         return {
             "greska": "Dogodila se greška pri obradi pitanja",
-            "savet": "Pokušaj ponovo ili promeni formulaciju pitanja"
+            "savet": "Pokušaj ponovo ili promeni formulaciju pitanja",
+            "tip_zahteva": structured_request.request_type.value,
+            "provider_pokušan": selected_provider
         }
 
-
-# Dodaj nove endpoint-e nakon postojećih
 
 @app.get("/providers")
 async def get_providers():
@@ -345,6 +409,146 @@ async def get_current_provider():
         info["service_status"] = "unavailable"
 
     return info
+
+
+@app.get("/providers/statistics")
+async def get_provider_statistics():
+    """Vraća osnovne statistike o korišćenju providera."""
+    if not hasattr(tracker, 'all_metrics') or not tracker.all_metrics:
+        return {
+            "message": "Nema dovoljno podataka",
+            "total_requests": 0,
+            "providers": {}
+        }
+
+    # Grupiši podatke po providerima
+    stats = {}
+
+    for metric in tracker.all_metrics:
+        # Koristi dictionary pristup umesto atributa
+        provider = metric.get('provider', 'unknown')
+
+        if provider not in stats:
+            stats[provider] = {
+                "total_requests": 0,
+                "successful_requests": 0,
+                "failed_requests": 0,
+                "total_tokens": 0
+            }
+
+        stats[provider]["total_requests"] += 1
+
+        # Koristi get() metod za bezbedno čitanje
+        if metric.get('success', False):
+            stats[provider]["successful_requests"] += 1
+            stats[provider]["total_tokens"] += metric.get('tokens_used', 0)
+        else:
+            stats[provider]["failed_requests"] += 1
+
+    # Dodaj procente
+    for provider, data in stats.items():
+        if data["total_requests"] > 0:
+            data["success_rate"] = round(
+                (data["successful_requests"] / data["total_requests"]) * 100,
+                2
+            )
+        else:
+            data["success_rate"] = 0
+
+    return {
+        "total_requests": len(tracker.all_metrics),
+        "providers": stats,
+        "collection_started": tracker.all_metrics[0].get('timestamp') if tracker.all_metrics else None
+    }
+
+
+@app.get("/request-types")
+async def get_request_types():
+    """Vraća sve podržane tipove zahteva sa opisima."""
+    types = []
+
+    for req_type in RequestType:
+        types.append({
+            "type": req_type.value,
+            "description": req_type.get_description(),
+            "preferred_provider": req_type.get_preferred_provider()
+        })
+
+    return {
+        "supported_types": types,
+        "total": len(types)
+    }
+
+
+@app.get("/routing/stats")
+async def get_routing_statistics():
+    """Vraća statistiku routing odluka."""
+    stats = smart_router.get_routing_statistics()
+
+    # Dodaj trenutnu strategiju
+    stats["current_strategy"] = type(smart_router.strategy).__name__
+
+    # Dodaj dostupne providere
+    stats["available_providers"] = smart_router.get_available_providers()
+
+    return stats
+
+
+@app.post("/routing/strategy")
+async def change_routing_strategy(strategy_name: str):
+    """
+    Menja routing strategiju.
+
+    Dostupne strategije:
+    - static: Fiksna pravila po tipu
+    - performance: Bazirana na performansama
+    - loadbalance: Round-robin
+    - hybrid: Kombinacija (default)
+    """
+    from web_api.models.router import (
+        StaticRoutingStrategy,
+        PerformanceRoutingStrategy,
+        LoadBalancingStrategy,
+        HybridRoutingStrategy
+    )
+
+    strategies = {
+        "static": StaticRoutingStrategy,
+        "performance": PerformanceRoutingStrategy,
+        "loadbalance": LoadBalancingStrategy,
+        "hybrid": HybridRoutingStrategy
+    }
+
+    if strategy_name not in strategies:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Nepoznata strategija. Dostupne: {list(strategies.keys())}"
+        )
+
+    # Promeni strategiju
+    smart_router.strategy = strategies[strategy_name]()
+
+    return {
+        "message": f"Routing strategija promenjena na: {strategy_name}",
+        "strategy": strategy_name,
+        "description": smart_router._get_selection_reason(None, "")
+    }
+
+
+# Primer strukturiranog zahteva za dokumentaciju
+structured_request_example = {
+    "pitanje": "Napiši funkciju koja sortira listu",
+    "tip": "code",
+    "context": {
+        "programming_language": "python",
+        "user_level": "beginner"
+    },
+    "preferences": {
+        "temperature": 0.5,
+        "max_tokens": 200
+    }
+}
+
 
 if __name__ == "__main__":
     # Za development - pokreni server direktno

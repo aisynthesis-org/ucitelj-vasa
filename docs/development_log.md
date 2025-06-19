@@ -1,5 +1,42 @@
 # Razvojni Dnevnik - Učitelj Vasa
 
+## Dan 10: Struktura zahteva i provider routing (20.06.2025)
+
+### Šta je urađeno:
+- ✅ Definisani tipovi zahteva (RequestType enum)
+- ✅ RequestAnalyzer za prepoznavanje tipova
+- ✅ StructuredRequest sa kontekstom i preferencama
+- ✅ Četiri routing strategije (static, performance, load balance, hybrid)
+- ✅ SmartProviderRouter sa istorijom odluka
+- ✅ Integracija u /pitaj endpoint
+- ✅ Novi API endpoint-i za upravljanje
+- ✅ Test suite za sve komponente
+
+### Naučene lekcije:
+- Strukturirani zahtevi omogućavaju bolju optimizaciju
+- Različiti tipovi zahteva zahtevaju različite pristupe
+- Routing strategije mogu drastično poboljšati performanse
+- Hybrid pristup daje najbolju fleksibilnost
+- Metadata o rutiranju korisna za debugging
+
+### Problemi i rešenja:
+- **Problem**: Kako tačno prepoznati tip zahteva?
+- **Rešenje**: Kombinacija ključnih reči i pattern matching
+- **Problem**: Kada koristiti koji provider?
+- **Rešenje**: Empirijski podaci + mogućnost override
+
+### Testiranje:
+- Request analyzer: 80%+ tačnost prepoznavanja
+- Routing strategije rade kako je očekivano
+- Override funkcionalnost testirana
+- Statistike se pravilno beleže
+
+### Za sutra (Dan 11):
+- Validacija sa Pydantic modelima
+- Provider-specific request/response modeli
+- Naprednije error handling
+
+
 ## Dan 9: Prvi web endpoint za multi-provider sistem (19.06.2025)
 
 ### Šta je urađeno:
