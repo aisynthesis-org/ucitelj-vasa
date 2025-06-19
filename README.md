@@ -20,8 +20,29 @@ Cilj je pomoći početnicima da savladaju osnove programiranja kroz interakciju 
 - ✅ Dan 7: Napredna personalizacija - profili, preference i adaptivno učenje
 - ✅ Dan 8: Uvod u FastAPI - Učitelj Vasa je sada web servis!
 - ✅ Dan 9: Multi-provider web endpoint-i - transparentnost i monitoring
-- ✅ Dan 10: Strukturirani zahtevi i inteligentno rutiranje! 🎯
-- ⏳ Dan 11: Validacija sa Pydantic i provider-specific modeli (sutra)
+- ✅ Dan 10: Strukturirani zahtevi i inteligentno rutiranje
+- ✅ Dan 11: Pydantic validacija i type safety! 🛡️
+- ⏳ Dan 12: Naprednije testiranje multi-provider API-ja (sutra)
+
+## 🛡️ Validacija i Type Safety
+
+### Pydantic modeli:
+- `SimpleQuestionRequest` - Osnovno pitanje
+- `StructuredQuestionRequest` - Pitanje sa kontekstom
+- `QuestionResponse` - Standardizovan odgovor
+- `ErrorResponse` - Standardizovane greške
+
+### Provider-specifični modeli:
+- `OpenAISpecificRequest` - OpenAI opcije
+- `GeminiSpecificRequest` - Gemini opcije
+- Validacija svih parametara
+
+### Novi endpoint-i:
+- `POST /validate-request` - Validira bez slanja
+- Provider-specific pozivi sa custom opcijama
+
+### Test UI:
+- http://localhost:8000/static/validation_test.html
 
 ## 🎯 Request Routing
 

@@ -1,5 +1,43 @@
 # Razvojni Dnevnik - Učitelj Vasa
 
+## Dan 11: Validacija sa Pydantic i provider-specific modeli (21.06.2025)
+
+### Šta je urađeno:
+- ✅ Instaliran i konfigurisan Pydantic
+- ✅ Kreirani modeli za sve tipove zahteva
+- ✅ Response modeli sa potpunim type safety
+- ✅ Provider-specifični modeli (OpenAI, Gemini)
+- ✅ Validacija konteksta i preferencija
+- ✅ /validate-request endpoint
+- ✅ Validated service wrapper-i
+- ✅ Interaktivni test UI
+- ✅ Custom validatori za biznis logiku
+
+### Naučene lekcije:
+- Pydantic drastično poboljšava sigurnost API-ja
+- Automatska validacija štedi mnogo koda
+- Type hints omogućavaju bolji IDE support
+- Response modeli garantuju konzistentnost
+- FastAPI + Pydantic = automatska dokumentacija
+
+### Problemi i rešenja:
+- **Problem**: Kako validirati enum vrednosti?
+- **Rešenje**: use_enum_values = True u Config
+- **Problem**: Nested modeli i validacija
+- **Rešenje**: root_validator za cross-field validaciju
+
+### Testiranje:
+- Svi test case-ovi prolaze
+- Validacija hvata sve neispravne podatke
+- Error poruke su jasne i korisne
+- UI omogućava lako testiranje
+
+### Za sutra (Dan 12):
+- Naprednije testiranje sa pytest
+- Mock-ovanje AI servisa
+- Load testing
+- Integration testovi
+
 ## Dan 10: Struktura zahteva i provider routing (20.06.2025)
 
 ### Šta je urađeno:

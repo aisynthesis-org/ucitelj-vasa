@@ -1,0 +1,483 @@
+<!DOCTYPE html>
+<html lang="sr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Učitelj Vasa - Pydantic Validation Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+
+        .container {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+
+        h1, h2 {
+            color: #333;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+            color: #555;
+        }
+
+        input[type="text"],
+        textarea,
+        select {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+
+        textarea {
+            min-height: 100px;
+            resize: vertical;
+        }
+
+        button {
+            background-color: #007bff;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-right: 10px;
+        }
+
+        button:hover {
+            background-color: #0056b3;
+        }
+
+        button.secondary {
+            background-color: #6c757d;
+        }
+
+        button.secondary:hover {
+            background-color: #545b62;
+        }
+
+        .response {
+            background-color: #f8f9fa;
+            padding: 15px;
+            border-radius: 4px;
+            margin-top: 20px;
+            white-space: pre-wrap;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .error {
+            background-color: #f8d7da;
+            color: #721c24;
+            padding: 10px;
+            border-radius: 4px;
+            margin-top: 10px;
+        }
+
+        .success {
+            background-color: #d4edda;
+            color: #155724;
+            padding: 10px;
+            border-radius: 4px;
+            margin-top: 10px;
+        }
+
+        .flex-row {
+            display: flex;
+            gap: 20px;
+        }
+
+        .flex-col {
+            flex: 1;
+        }
+
+        .checkbox-group {
+            margin: 10px 0;
+        }
+
+        .checkbox-group label {
+            display: inline;
+            margin-left: 5px;
+            font-weight: normal;
+        }
+
+        .slider-group {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .slider {
+            flex: 1;
+        }
+
+        .slider-value {
+            min-width: 50px;
+            text-align: right;
+        }
+
+        .json-input {
+            font-family: 'Courier New', monospace;
+            font-size: 13px;
+        }
+    </style>
+</head>
+<body>
+    <h1>🎓 Učitelj Vasa - Pydantic Validation Test</h1>
+
+    <div class="container">
+        <h2>Strukturirani Zahtev</h2>
+
+        <div class="form-group">
+            <label for="question">Pitanje: *</label>
+            <textarea id="question" placeholder="Upiši svoje pitanje...">Kako da sortiram listu u Python-u?</textarea>
+        </div>
+
+        <div class="flex-row">
+            <div class="flex-col">
+                <h3>Tip Zahteva</h3>
+                <div class="form-group">
+                    <label for="requestType">Tip:</label>
+                    <select id="requestType">
+                        <option value="">Automatski prepoznaj</option>
+                        <option value="chat">Chat - Obična konverzacija</option>
+                        <option value="code">Code - Generisanje koda</option>
+                        <option value="debug">Debug - Pomoć sa greškama</option>
+                        <option value="explain">Explain - Objašnjenje koncepata</option>
+                        <option value="review">Review - Pregled koda</option>
+                        <option value="translate">Translate - Prevod koda</option>
+                        <option value="optimize">Optimize - Optimizacija</option>
+                    </select>
+                </div>
+
+                <h3>Kontekst</h3>
+                <div class="form-group">
+                    <label for="language">Programski jezik:</label>
+                    <select id="language">
+                        <option value="">Nije specificirano</option>
+                        <option value="python">Python</option>
+                        <option value="javascript">JavaScript</option>
+                        <option value="java">Java</option>
+                        <option value="cpp">C++</option>
+                        <option value="csharp">C#</option>
+                        <option value="go">Go</option>
+                        <option value="rust">Rust</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="userLevel">Nivo znanja:</label>
+                    <select id="userLevel">
+                        <option value="beginner">Početnik</option>
+                        <option value="intermediate" selected>Srednji</option>
+                        <option value="advanced">Napredan</option>
+                        <option value="expert">Ekspert</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="errorMessage">Error poruka (za debug):</label>
+                    <input type="text" id="errorMessage" placeholder="npr. IndexError: list index out of range">
+                </div>
+            </div>
+
+            <div class="flex-col">
+                <h3>Preference</h3>
+
+                <div class="form-group">
+                    <label>Temperatura (kreativnost):</label>
+                    <div class="slider-group">
+                        <input type="range" id="temperature" class="slider"
+                               min="0" max="2" step="0.1" value="0.7">
+                        <span id="tempValue" class="slider-value">0.7</span>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>Max tokena:</label>
+                    <div class="slider-group">
+                        <input type="range" id="maxTokens" class="slider"
+                               min="50" max="2000" step="50" value="150">
+                        <span id="tokensValue" class="slider-value">150</span>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="responseStyle">Stil odgovora:</label>
+                    <select id="responseStyle">
+                        <option value="concise">Sažet</option>
+                        <option value="detailed">Detaljan</option>
+                        <option value="tutorial">Tutorial</option>
+                    </select>
+                </div>
+
+                <div class="checkbox-group">
+                    <input type="checkbox" id="includeExamples" checked>
+                    <label for="includeExamples">Uključi primere</label>
+                </div>
+
+                <div class="form-group">
+                    <label for="forceProvider">Forsiraj provider:</label>
+                    <select id="forceProvider">
+                        <option value="">Automatski izbor</option>
+                        <option value="openai">OpenAI</option>
+                        <option value="gemini">Gemini</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label for="codeSnippet">Kod (opciono):</label>
+            <textarea id="codeSnippet" class="json-input" placeholder="Paste your code here..."></textarea>
+        </div>
+
+        <div class="form-group">
+            <label for="sessionId">Session ID (opciono):</label>
+            <input type="text" id="sessionId" placeholder="sess_abc123" pattern="^[a-zA-Z0-9_-]+$">
+        </div>
+
+        <button onclick="sendRequest()">Pošalji Pitanje</button>
+        <button onclick="validateOnly()" class="secondary">Samo Validiraj</button>
+        <button onclick="showJSON()" class="secondary">Prikaži JSON</button>
+        <button onclick="clearForm()" class="secondary">Očisti</button>
+
+        <div id="result"></div>
+    </div>
+
+    <div class="container">
+        <h2>Raw JSON Editor</h2>
+        <div class="form-group">
+            <label for="rawJson">JSON Request:</label>
+            <textarea id="rawJson" class="json-input" rows="15">{
+  "pitanje": "Kako da sortiram listu?",
+  "tip": "explain",
+  "context": {
+    "programming_language": "python",
+    "user_level": "beginner"
+  },
+  "preferences": {
+    "temperature": 0.7,
+    "response_style": "detailed"
+  }
+}</textarea>
+        </div>
+        <button onclick="sendRawJSON()">Pošalji Raw JSON</button>
+    </div>
+
+    <script>
+        // Update slider values
+        document.getElementById('temperature').addEventListener('input', function(e) {
+            document.getElementById('tempValue').textContent = e.target.value;
+        });
+
+        document.getElementById('maxTokens').addEventListener('input', function(e) {
+            document.getElementById('tokensValue').textContent = e.target.value;
+        });
+
+        function buildRequest() {
+            const request = {
+                pitanje: document.getElementById('question').value
+            };
+
+            // Tip
+            const tip = document.getElementById('requestType').value;
+            if (tip) request.tip = tip;
+
+            // Context
+            const context = {};
+            const lang = document.getElementById('language').value;
+            if (lang) context.programming_language = lang;
+
+            const errorMsg = document.getElementById('errorMessage').value;
+            if (errorMsg) context.error_message = errorMsg;
+
+            const code = document.getElementById('codeSnippet').value;
+            if (code) context.code_snippet = code;
+
+            context.user_level = document.getElementById('userLevel').value;
+
+            if (Object.keys(context).length > 1) {  // Samo user_level uvek postoji
+                request.context = context;
+            }
+
+            // Preferences
+            const preferences = {
+                temperature: parseFloat(document.getElementById('temperature').value),
+                max_tokens: parseInt(document.getElementById('maxTokens').value),
+                response_style: document.getElementById('responseStyle').value,
+                include_examples: document.getElementById('includeExamples').checked
+            };
+            request.preferences = preferences;
+
+            // Force provider
+            const forceProvider = document.getElementById('forceProvider').value;
+            if (forceProvider) request.force_provider = forceProvider;
+
+            // Session ID
+            const sessionId = document.getElementById('sessionId').value;
+            if (sessionId) request.session_id = sessionId;
+
+            return request;
+        }
+
+        async function sendRequest() {
+            const resultDiv = document.getElementById('result');
+            resultDiv.innerHTML = '<div class="success">Šalje se zahtev...</div>';
+
+            try {
+                const request = buildRequest();
+
+                const response = await fetch('http://localhost:8000/pitaj', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(request)
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    resultDiv.innerHTML = `
+                        <div class="success">✅ Uspešno!</div>
+                        <div class="response">
+<strong>ODGOVOR:</strong>
+${data.odgovor}
+
+<strong>METADATA:</strong>
+Tip zahteva: ${data.tip_zahteva}
+Provider: ${data.provider.selected} (${data.provider.reason})
+Strategija: ${data.provider.strategy}
+Vreme odgovora: ${data.response_time_ms}ms
+Kontekst korišćen: ${data.context_used ? 'Da' : 'Ne'}
+
+<strong>OPTIMIZACIJA:</strong>
+Temperature: ${data.optimization.temperature}
+Max tokena: ${data.optimization.max_tokens}
+                        </div>
+                    `;
+                } else {
+                    resultDiv.innerHTML = `
+                        <div class="error">❌ Greška ${response.status}</div>
+                        <div class="response">${JSON.stringify(data, null, 2)}</div>
+                    `;
+                }
+            } catch (error) {
+                resultDiv.innerHTML = `
+                    <div class="error">❌ Network greška: ${error.message}</div>
+                `;
+            }
+        }
+
+        async function validateOnly() {
+            const resultDiv = document.getElementById('result');
+            resultDiv.innerHTML = '<div class="success">Validiram zahtev...</div>';
+
+            try {
+                const request = buildRequest();
+
+                const response = await fetch('http://localhost:8000/validate-request', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(request)
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    resultDiv.innerHTML = `
+                        <div class="success">✅ Validacija prošla!</div>
+                        <div class="response">${JSON.stringify(data, null, 2)}</div>
+                    `;
+                } else {
+                    resultDiv.innerHTML = `
+                        <div class="error">❌ Validacija neuspešna</div>
+                        <div class="response">${JSON.stringify(data, null, 2)}</div>
+                    `;
+                }
+            } catch (error) {
+                resultDiv.innerHTML = `
+                    <div class="error">❌ Network greška: ${error.message}</div>
+                `;
+            }
+        }
+
+        function showJSON() {
+            const request = buildRequest();
+            document.getElementById('rawJson').value = JSON.stringify(request, null, 2);
+            document.getElementById('result').innerHTML = `
+                <div class="success">JSON prikazan u editoru ispod</div>
+            `;
+        }
+
+        async function sendRawJSON() {
+            const resultDiv = document.getElementById('result');
+
+            try {
+                const json = JSON.parse(document.getElementById('rawJson').value);
+
+                const response = await fetch('http://localhost:8000/pitaj', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(json)
+                });
+
+                const data = await response.json();
+
+                resultDiv.innerHTML = `
+                    <div class="${response.ok ? 'success' : 'error'}">
+                        Status: ${response.status}
+                    </div>
+                    <div class="response">${JSON.stringify(data, null, 2)}</div>
+                `;
+            } catch (error) {
+                resultDiv.innerHTML = `
+                    <div class="error">❌ JSON Parse greška: ${error.message}</div>
+                `;
+            }
+        }
+
+        function clearForm() {
+            document.getElementById('question').value = '';
+            document.getElementById('requestType').value = '';
+            document.getElementById('language').value = '';
+            document.getElementById('userLevel').value = 'intermediate';
+            document.getElementById('errorMessage').value = '';
+            document.getElementById('codeSnippet').value = '';
+            document.getElementById('temperature').value = 0.7;
+            document.getElementById('tempValue').textContent = '0.7';
+            document.getElementById('maxTokens').value = 150;
+            document.getElementById('tokensValue').textContent = '150';
+            document.getElementById('responseStyle').value = 'concise';
+            document.getElementById('includeExamples').checked = true;
+            document.getElementById('forceProvider').value = '';
+            document.getElementById('sessionId').value = '';
+            document.getElementById('result').innerHTML = '';
+        }
+    </script>
+</body>
+</html>

@@ -5,10 +5,12 @@ Transformiše konzolnu aplikaciju u web servis
 
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
-from typing import Dict, Any, Optional, Union
+from typing import Dict, Any, Optional, Union, List
 from datetime import datetime
 import sys
 import os
+from fastapi.staticfiles import StaticFiles
+
 
 # Dodaj src folder u Python path
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -22,6 +24,21 @@ from utils.performance_tracker import tracker
 # Import za routing i request handling
 from web_api.models.request_types import RequestAnalyzer, RequestType, StructuredRequest
 from web_api.models.router import smart_router
+
+
+# Dodaj nove import-e na početak
+from web_api.models.validation import (
+    SimpleQuestionRequest,
+    StructuredQuestionRequest,
+    QuestionResponse,
+    ErrorResponse,
+    ProviderInfo,
+    OptimizationInfo
+)
+from fastapi import Query
+from fastapi.responses import JSONResponse
+import time
+
 
 # Kreiraj FastAPI instancu
 app = FastAPI(
@@ -43,6 +60,13 @@ app.add_middleware(
 ai_service = None
 startup_time = None
 
+
+# Nakon kreiranja app instance
+app.mount(
+    "/static",
+    StaticFiles(directory=os.path.join(os.path.dirname(__file__), "static")),
+    name="static"
+)
 
 @app.on_event("startup")
 async def startup_event():
@@ -136,111 +160,111 @@ async def o_vasi():
     }
 
 
+# Zameni postojeći /pitaj endpoint sa ovim
+
 @app.post("/pitaj",
-    summary="Postavi pitanje sa inteligentnim rutiranjem",
-    description="""
-    Napredni endpoint koji:
-    - Analizira tip pitanja
-    - Bira najbolji AI provider
-    - Optimizuje parametre
-    - Vraća detaljan odgovor sa metapodacima
-    
-    Primer strukturiranog zahteva:
-    ```json
-    {
-        "pitanje": "Napiši funkciju koja sortira listu",
-        "tip": "code",
-        "context": {
-            "programming_language": "python",
-            "user_level": "beginner"
-        }
-    }
-    ```
+          summary="Postavi pitanje sa naprednom validacijom",
+          description="""
+    Endpoint sa Pydantic validacijom koji podržava:
+    - Jednostavne zahteve (samo pitanje)
+    - Strukturirane zahteve sa kontekstom
+    - Provider-specifične opcije
+    - Automatsku validaciju svih podataka
     """,
-    response_description="Odgovor sa routing informacijama"
-)
+          response_model=QuestionResponse,
+          responses={
+              422: {
+                  "description": "Validation Error",
+                  "model": ErrorResponse
+              },
+              500: {
+                  "description": "Internal Server Error",
+                  "model": ErrorResponse
+              }
+          },
+          tags=["Questions"]
+          )
 async def pitaj_vasu(
-    pitanje_data: Union[Dict[str, str], Dict[str, Any]],
-    force_provider: Optional[str] = None,
-    analyze_request: bool = True
+        request: Union[SimpleQuestionRequest, StructuredQuestionRequest],
+        analyze_request: bool = Query(
+            True,
+            description="Da li analizirati tip zahteva"
+        )
 ):
     """
-    Postavlja pitanje Učitelju Vasi sa inteligentnim rutiranjem.
+    Postavlja pitanje Učitelju Vasi sa Pydantic validacijom.
 
-    Podržava:
-    - Jednostavan format: {"pitanje": "..."}
-    - Strukturiran format: {"pitanje": "...", "tip": "code", "context": {...}}
-
-    Query parametri:
-    - force_provider: Forsiraj specifičan provider (openai/gemini)
-    - analyze_request: Da li da analizira i struktuira zahtev (default: true)
+    Request body se automatski validira prema modelu.
+    Podržava jednostavne i strukturirane zahteve.
     """
-    # Osnovna validacija
-    if "pitanje" not in pitanje_data:
-        raise HTTPException(
-            status_code=400,
-            detail="Nedostaje 'pitanje' polje u zahtevu"
+    start_time = time.time()
+
+    # Konvertuj u strukturiran zahtev ako je jednostavan
+    if isinstance(request, SimpleQuestionRequest):
+        structured_request = RequestAnalyzer.create_structured_request(
+            request.pitanje
         )
-
-    pitanje = pitanje_data["pitanje"]
-
-    if not pitanje.strip():
-        raise HTTPException(
-            status_code=400,
-            detail="Pitanje ne može biti prazno"
-        )
-
-    # Kreiraj strukturiran zahtev
-    if analyze_request:
-        # Proveri da li je već strukturiran
-        if "tip" in pitanje_data:
-            # Korisnik je poslao strukturiran zahtev
-            try:
-                request_type = RequestType(pitanje_data["tip"])
-            except ValueError:
-                request_type = RequestType.CHAT
-
-            structured_request = StructuredRequest(
-                content=pitanje,
-                request_type=request_type,
-                context=pitanje_data.get("context", {}),
-                preferences=pitanje_data.get("preferences", {})
-            )
-        else:
-            # Analiziraj sirovo pitanje
-            structured_request = RequestAnalyzer.create_structured_request(
-                pitanje,
-                additional_context=pitanje_data.get("context")
-            )
     else:
-        # Bez analize, tretiraj kao obican chat
-        structured_request = StructuredRequest(
-            content=pitanje,
-            request_type=RequestType.CHAT
+        # Već je strukturiran
+        if analyze_request and not request.tip:
+            # Analiziraj tip ako nije eksplicitno postavljen
+            analyzed_type = RequestAnalyzer.analyze(request.pitanje)
+            request_type = analyzed_type
+        else:
+            request_type = request.tip or RequestType.CHAT
+
+        # Kreiraj interni structured request
+        from web_api.models.request_types import (
+            StructuredRequest as InternalStructuredRequest,
+            RequestContext as InternalContext
         )
 
-    # Rutiraj zahtev
-    selected_provider, routing_metadata = smart_router.route_request(
-        structured_request,
-        override_provider=force_provider
-    )
+        # Konvertuj Pydantic context u interni
+        internal_context = None
+        if request.context:
+            internal_context = InternalContext(
+                programming_language=request.context.programming_language,
+                error_message=request.context.error_message,
+                code_snippet=request.context.code_snippet,
+                user_level=request.context.user_level,
+                previous_attempts=request.context.previous_attempts
+            )
 
-    # Proveri da li imamo AI servis
+        structured_request = InternalStructuredRequest(
+            content=request.pitanje,
+            request_type=request_type,
+            context=internal_context,
+            preferences=request.preferences.dict() if request.preferences else {}
+        )
+
+    # Proveri AI servis
     if not ai_service:
-        return {
-            "greska": "AI servis trenutno nije dostupan",
-            "tip_zahteva": structured_request.request_type.value,
-            "routing": routing_metadata
-        }
+        return JSONResponse(
+            status_code=503,
+            content=ErrorResponse(
+                error="service_unavailable",
+                detail="AI servis trenutno nije dostupan",
+                suggestion="Pokušaj ponovo za nekoliko sekundi",
+                error_code="AI001"
+            ).dict()
+        )
 
     try:
+        # Rutiraj zahtev
+        force_provider = None
+        if isinstance(request, StructuredQuestionRequest):
+            force_provider = request.force_provider
+
+        selected_provider, routing_metadata = smart_router.route_request(
+            structured_request,
+            override_provider=force_provider
+        )
+
         # Promeni provider ako je potrebno
         original_provider = Config.AI_PROVIDER
 
         if selected_provider != original_provider and selected_provider != "simulation":
             Config.AI_PROVIDER = selected_provider
-            # Reset factory da učita novi provider
-            from ai_services.ai_factory import AIServiceFactory
             AIServiceFactory.reset()
             current_service = AIServiceFactory.create_resilient_service()
         else:
@@ -255,54 +279,197 @@ async def pitaj_vasu(
         # Generiši poboljšan prompt
         enhanced_prompt = structured_request.get_enhanced_prompt()
 
-        # Pozovi AI sa personalizacijom ako postoji
-        if hasattr(current_service, 'pozovi_ai_personalizovano'):
-            # Ovde bi trebalo proslediti user profile
-            odgovor = current_service.pozovi_ai(enhanced_prompt)
-        else:
-            odgovor = current_service.pozovi_ai(enhanced_prompt)
+        # Pozovi AI
+        odgovor = current_service.pozovi_ai(enhanced_prompt, VASA_LICNOST)
 
         # Vrati originalni provider
         if selected_provider != original_provider:
             Config.AI_PROVIDER = original_provider
             AIServiceFactory.reset()
 
-        # Pripremi response
-        response = {
-            "pitanje": pitanje,
-            "odgovor": odgovor,
-            "tip_zahteva": structured_request.request_type.value,
-            "provider": {
-                "selected": selected_provider,
-                "reason": routing_metadata.get("selected_reason"),
-                "strategy": routing_metadata.get("strategy")
-            },
-            "optimizacija": {
-                "temperature": optimized_params.get("temperature"),
-                "max_tokens": optimized_params.get("max_tokens")
-            }
-        }
+        # Računaj vreme odgovora
+        response_time_ms = int((time.time() - start_time) * 1000)
 
-        # Dodaj kontekst ako postoji
-        if structured_request.context.has_code_context():
-            response["context"] = {
-                "language": structured_request.context.programming_language,
-                "has_code": bool(structured_request.context.code_snippet),
-                "has_error": bool(structured_request.context.error_message)
-            }
+        # Pripremi response koristeći Pydantic model
+        return QuestionResponse(
+            pitanje=request.pitanje,
+            odgovor=odgovor,
+            tip_zahteva=structured_request.request_type.value,
+            provider=ProviderInfo(
+                selected=selected_provider,
+                reason=routing_metadata.get("selected_reason", "Default selection"),
+                strategy=routing_metadata.get("strategy", "unknown"),
+                available_providers=routing_metadata.get("available_providers", [])
+            ),
+            optimization=OptimizationInfo(
+                temperature=optimized_params.get("temperature", 0.7),
+                max_tokens=optimized_params.get("max_tokens", 150),
+                adjusted_for_type=True
+            ),
+            context_used=structured_request.context.has_code_context(),
+            session_id=request.session_id if isinstance(request, StructuredQuestionRequest) else None,
+            response_time_ms=response_time_ms
+        )
 
-        return response
-
+    except ValidationError as e:
+        # Pydantic validation error
+        return JSONResponse(
+            status_code=422,
+            content=ErrorResponse(
+                error="validation_error",
+                detail=str(e),
+                suggestion="Proveri format podataka",
+                error_code="VAL002"
+            ).dict()
+        )
     except Exception as e:
-        # Loguj grešku ali vrati user-friendly poruku
+        # Opšta greška
         print(f"❌ Greška pri obradi pitanja: {e}")
 
-        return {
-            "greska": "Dogodila se greška pri obradi pitanja",
-            "savet": "Pokušaj ponovo ili promeni formulaciju pitanja",
-            "tip_zahteva": structured_request.request_type.value,
-            "provider_pokušan": selected_provider
-        }
+        return JSONResponse(
+            status_code=500,
+            content=ErrorResponse(
+                error="processing_error",
+                detail="Dogodila se greška pri obradi pitanja",
+                suggestion="Pokušaj ponovo ili promeni formulaciju",
+                error_code="PROC001"
+            ).dict()
+        )
+
+
+# Ažuriraj i ostale endpoint-e da koriste modele
+
+from pydantic import create_model, ValidationError
+from typing import Type
+
+# Dinamički kreiraj response modele za postojeće endpoint-e
+
+ProviderListResponse = create_model(
+    'ProviderListResponse',
+    providers=(List[Dict[str, Any]], ...),
+    active_provider=(str, ...),
+    total_configured=(int, ...)
+)
+
+
+@app.get("/providers",
+         response_model=ProviderListResponse,
+         tags=["Providers"]
+         )
+async def get_providers():
+    """Vraća informacije o dostupnim AI providerima."""
+    # Postojeća logika ostaje ista
+    providers = []
+
+    if Config.OPENAI_API_KEY:
+        providers.append({
+            "name": "openai",
+            "display_name": "OpenAI GPT",
+            "available": True,
+            "is_active": Config.AI_PROVIDER == "openai",
+            "features": ["chat", "code_generation", "analysis"]
+        })
+
+    if Config.GEMINI_API_KEY:
+        providers.append({
+            "name": "gemini",
+            "display_name": "Google Gemini",
+            "available": True,
+            "is_active": Config.AI_PROVIDER == "gemini",
+            "features": ["chat", "multimodal", "fast_responses"]
+        })
+
+    if not providers:
+        providers.append({
+            "name": "simulation",
+            "display_name": "Lokalna simulacija",
+            "available": True,
+            "is_active": True,
+            "features": ["basic_responses"]
+        })
+
+    return ProviderListResponse(
+        providers=providers,
+        active_provider=Config.AI_PROVIDER,
+        total_configured=len([p for p in providers if p["name"] != "simulation"])
+    )
+
+
+# Dodaj novi endpoint za validaciju
+
+@app.post("/validate-request",
+          summary="Validira zahtev bez slanja AI-ju",
+          description="Koristi za proveru da li je zahtev valjan pre slanja",
+          tags=["Validation"]
+          )
+async def validate_request(
+        request: StructuredQuestionRequest
+) -> Dict[str, Any]:
+    """
+    Validira strukturiran zahtev i vraća analizu.
+
+    Korisno za frontend da proveri podatke pre slanja.
+    """
+    # Analiziraj tip ako nije postavljen
+    detected_type = None
+    if not request.tip:
+        detected_type = RequestAnalyzer.analyze(request.pitanje)
+
+    # Proveri kontekst
+    context_complete = False
+    context_warnings = []
+
+    if request.context:
+        if request.tip == "debug" or detected_type == RequestType.CODE_DEBUG:
+            if not request.context.code_snippet and not request.context.error_message:
+                context_warnings.append(
+                    "Debug zahtevi obično trebaju kod ili error poruku"
+                )
+
+        if request.context.code_snippet:
+            # Proveri da li je kod bezbedan
+            from web_api.models.validation import sanitize_code_snippet
+            sanitized = sanitize_code_snippet(request.context.code_snippet)
+            if sanitized != request.context.code_snippet:
+                context_warnings.append(
+                    "Kod sadrži potencijalno nesigurne elemente"
+                )
+
+        context_complete = bool(
+            request.context.programming_language or
+            request.context.code_snippet
+        )
+
+    # Analiza preferencija
+    preference_notes = []
+    if request.preferences:
+        if request.preferences.temperature < 0.3:
+            preference_notes.append("Vrlo niska temperatura - deterministički odgovori")
+        elif request.preferences.temperature > 1.5:
+            preference_notes.append("Vrlo visoka temperatura - kreativni ali možda nestabilni odgovori")
+
+        if request.preferences.max_tokens < 100:
+            preference_notes.append("Mali broj tokena - kratak odgovor")
+        elif request.preferences.max_tokens > 1000:
+            preference_notes.append("Veliki broj tokena - dugačak odgovor")
+
+    return {
+        "valid": True,
+        "analysis": {
+            "detected_type": detected_type.value if detected_type else request.tip,
+            "has_context": request.context is not None,
+            "context_complete": context_complete,
+            "context_warnings": context_warnings,
+            "has_preferences": request.preferences is not None,
+            "preference_notes": preference_notes,
+            "estimated_tokens": len(request.pitanje.split()) * 2,  # Gruba procena
+            "force_provider": request.force_provider,
+            "session_tracking": request.session_id is not None
+        },
+        "suggestions": [
+                           w for w in context_warnings
+                       ] + preference_notes
+    }
 
 
 @app.get("/providers")
