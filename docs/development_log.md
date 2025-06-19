@@ -1,5 +1,40 @@
 # Razvojni Dnevnik - Učitelj Vasa
 
+## Dan 9: Prvi web endpoint za multi-provider sistem (19.06.2025)
+
+### Šta je urađeno:
+- ✅ Provider info endpoint-i (/providers, /providers/current)
+- ✅ Status endpoint sa osnovnim informacijama
+- ✅ Statistics endpoint sa podacima iz tracker-a
+- ✅ Health check endpoint-i (osnovni i AI-specific)
+- ✅ Python monitoring script
+- ✅ Integracija sa postojećim komponentama
+
+### Naučene lekcije:
+- Read-only endpoint-i su bezbedni i korisni
+- Health check-ovi moraju biti brzi i pouzdani
+- Statistike omogućavaju uvid u korišćenje
+- Monitoring je ključan za produkciju
+- Postojeće komponente se lako integrišu
+
+### Problemi i rešenja:
+- **Problem**: Kako prikazati status bez otkrivanja tajnih podataka?
+- **Rešenje**: Prikazuj samo javne informacije (ime, status, features)
+- **Problem**: Health check može biti spor ako testira AI
+- **Rešenje**: Osnovna provera samo proverava postojanje servisa
+
+### Testiranje:
+- Svi endpoint-i vraćaju očekivane podatke
+- Health check-ovi rade brzo (<100ms)
+- Statistics se pravilno agregiraju
+- Monitor script uspešno prati status
+
+### Za sutra (Dan 10):
+- Struktura zahteva za različite tipove pitanja
+- Provider routing logika
+- Inteligentno biranje providera
+
+
 ## Dan 8: Uvod u FastAPI (18.06.2025)
 
 ### Šta je urađeno:

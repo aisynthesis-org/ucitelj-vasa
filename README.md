@@ -18,8 +18,26 @@ Cilj je pomoći početnicima da savladaju osnove programiranja kroz interakciju 
 - ✅ Dan 5: Profilisanje i optimizacija - automatski izbor najboljih postavki
 - ✅ Dan 6: Resilience sistem - retry, circuit breaker, fallback i graceful degradation
 - ✅ Dan 7: Napredna personalizacija - profili, preference i adaptivno učenje
-- ✅ Dan 8: Uvod u FastAPI - Učitelj Vasa je sada web servis! 🌐
-- ⏳ Dan 9: Prvi web endpoint za multi-provider sistem (sutra)
+- ✅ Dan 8: Uvod u FastAPI - Učitelj Vasa je sada web servis!
+- ✅ Dan 9: Multi-provider web endpoint-i - transparentnost i monitoring! 📊
+- ⏳ Dan 10: Struktura zahteva i provider routing (sutra)
+
+## 📊 Provider Management API
+
+### Informacioni endpoint-i:
+- `GET /providers` - Lista dostupnih AI providera
+- `GET /providers/current` - Detalji o aktivnom provideru
+- `GET /providers/statistics` - Statistike korišćenja
+
+### Status i Health:
+- `GET /status` - Kompletan status sistema
+- `GET /health` - Osnovni health check
+- `GET /health/ai` - Health check AI servisa
+
+### Monitoring:
+- Python script za kontinuirano praćenje
+- Jednostavna provera svih komponenti
+
 
 ## 🌐 Web API
 
